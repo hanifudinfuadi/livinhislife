@@ -69,18 +69,19 @@ const PortfolioNav = () => {
         </button>
 
         {/* Metal CTA — hidden on small screens, sits left of the mobile toggle */}
-        <MetalButton
-          size="sm"
-          preset="silver"
-          theme="light"
-          wrapperClassName="nav-cta hidden md:inline-flex"
-          className="nav-cta-btn"
-          onClick={() => navigate('/login')}
-          aria-label="Masuk ke halaman admin"
-        >
-          <LogIn className="size-4" />
-          Masuk
-        </MetalButton>
+        <div className="nav-cta hidden md:block">
+          <MetalButton
+            size="sm"
+            preset="silver"
+            theme="light"
+            className="nav-cta-btn"
+            onClick={() => navigate('/login')}
+            aria-label="Masuk ke halaman admin"
+          >
+            <LogIn className="size-4" />
+            Masuk
+          </MetalButton>
+        </div>
       </div>
     </nav>
   );
