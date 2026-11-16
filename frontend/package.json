@@ -6,22 +6,35 @@
   "dependencies": {
     "@react-three/drei": "^10.7.9",
     "@react-three/fiber": "^9.8.2",
+    "clsx": "^2.1.1",
     "framer-motion": "^12.23.24",
     "lucide-react": "^0.507.0",
+    "metal-fx": "^2.0.11",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
     "react-router-dom": "^7.9.6",
+    "tailwind-merge": "^3.7.0",
     "three": "^0.187.0"
   },
   "scripts": {
+    "tailwind": "tailwindcss -i src/styles/tailwind.input.css -o src/styles/tailwind.output.css --minify",
     "dev": "react-scripts start",
     "start": "react-scripts start",
     "build": "react-scripts build",
     "preview": "react-scripts serve --port 5173",
-    "test": "react-scripts test"
+    "test": "react-scripts test",
+    "prestart": "yarn tailwind",
+    "prebuild": "yarn tailwind"
   },
   "devDependencies": {
-    "react-scripts": "5.0.1"
+    "@types/node": "^26.6.6",
+    "@types/react": "^19.3.0",
+    "@types/react-dom": "^19.3.0",
+    "autoprefixer": "10.6.2",
+    "postcss": "8.5.32",
+    "react-scripts": "5.0.1",
+    "tailwindcss": "3.4.19",
+    "typescript": "5.6.3"
   },
   "browserslist": {
     "production": [
