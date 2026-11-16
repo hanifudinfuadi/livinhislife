@@ -12,8 +12,12 @@ const categories = [
 const fresh = { title: '', category: '', description: '', body: '', images: [], metadata: {}, published: false, music_url: '', music_title: '', intro_video: '' };
 
 const CHUNK_SIZE = 3 * 1024 * 1024;
-const MAX_UPLOAD_BYTES = 14 * 1024 * 1024;
-const MAX_UPLOAD_MB = 14;
+const LIMITS = {
+  image: { bytes: 14 * 1024 * 1024, label: 'gambar' },
+  video: { bytes: 100 * 1024 * 1024, label: 'video' },
+  audio: { bytes: 30 * 1024 * 1024, label: 'audio' },
+};
+const limitOf = (kind) => LIMITS[kind] || LIMITS.video;
 
 const PortfolioManager = ({ channel }) => {
   const [kind, setKind] = useState('documentation');
@@ -33,6 +37,7 @@ const PortfolioManager = ({ channel }) => {
   const [videoBusy, setVideoBusy] = useState(false);
   const audioInput = useRef(null);
   const [audioBusy, setAudioBusy] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState(null);
 
   const resolveUrl = (url) => (!url ? '' : url.startsWith('http') ? url : `${API}${url}`);
 
@@ -66,7 +71,7 @@ const PortfolioManager = ({ channel }) => {
     return uploaded[0]?.url || '';
   };
 
-  const uploadInParts = async (file, kind) => {
+  const uploadInParts = async (file, kind, onProgress) => {
     const uploadId = `${Date.now()}-${Math.random().toString(36).slice(2, 10)}`;
     const total = Math.max(1, Math.ceil(file.size / CHUNK_SIZE));
     for (let index = 0; index < total; index += 1) {
@@ -77,6 +82,7 @@ const PortfolioManager = ({ channel }) => {
       data.append('file', chunk, `part-${index}.bin`);
       const response = await fetch(`${API}/api/portfolio/upload-part`, { method: 'POST', body: data, credentials: 'include' });
       if (!response.ok) throw new Error(await describeUploadError(response));
+      if (onProgress) onProgress(Math.round(((index + 1) / total) * 95));
     }
     const response = await fetch(`${API}/api/portfolio/upload-finish`, {
       method: 'POST',
@@ -85,27 +91,32 @@ const PortfolioManager = ({ channel }) => {
       body: JSON.stringify({ upload_id: uploadId, kind, filename: file.name, content_type: file.type }),
     });
     if (!response.ok) throw new Error(await describeUploadError(response));
-    return response.json();
+    const uploaded = await response.json();
+    if (onProgress) onProgress(100);
+    return uploaded;
   };
 
   const uploadVideo = async (event) => {
     const file = (event.target.files || [])[0];
     event.target.value = '';
     if (!file) return;
-    if (file.size > MAX_UPLOAD_BYTES) {
-      setNotice(`Video lebih dari ${MAX_UPLOAD_MB} MB. Gunakan URL video (YouTube/Vimeo) atau kecilkan resolusinya.`);
+    const limit = limitOf('video');
+    if (file.size > limit.bytes) {
+      setNotice(`Video lebih dari ${Math.round(limit.bytes / 1048576)} MB. Gunakan URL video (YouTube/Vimeo) atau kecilkan resolusinya.`);
       return;
     }
     setVideoBusy(true);
+    setUploadProgress(0);
     setNotice('');
     try {
-      const uploaded = await uploadInParts(file, 'video');
+      const uploaded = await uploadInParts(file, 'video', setUploadProgress);
       setForm((current) => ({ ...current, intro_video: uploaded.url || '' }));
       setNotice('Video cuplikan berhasil diunggah.');
     } catch (error) {
       setNotice(error.message);
     } finally {
       setVideoBusy(false);
+      setUploadProgress(null);
     }
   };
 
@@ -113,14 +124,16 @@ const PortfolioManager = ({ channel }) => {
     const file = (event.target.files || [])[0];
     event.target.value = '';
     if (!file) return;
-    if (file.size > MAX_UPLOAD_BYTES) {
-      setNotice(`Lagu lebih dari ${MAX_UPLOAD_MB} MB. Kecilkan bitrate MP3-nya (mis. 128 kbps).`);
+    const limit = limitOf('audio');
+    if (file.size > limit.bytes) {
+      setNotice(`Lagu lebih dari ${Math.round(limit.bytes / 1048576)} MB. Kecilkan bitrate MP3-nya (mis. 128 kbps).`);
       return;
     }
     setAudioBusy(true);
+    setUploadProgress(0);
     setNotice('');
     try {
-      const uploaded = await uploadInParts(file, 'audio');
+      const uploaded = await uploadInParts(file, 'audio', setUploadProgress);
       setForm((current) => ({
         ...current,
         music_url: uploaded.url || '',
@@ -132,6 +145,7 @@ const PortfolioManager = ({ channel }) => {
       setNotice(error.message);
     } finally {
       setAudioBusy(false);
+      setUploadProgress(null);
     }
   };
 
@@ -339,10 +353,10 @@ const PortfolioManager = ({ channel }) => {
       <div className="portfolio-upload-row">
         <input ref={audioInput} type="file" accept="audio/mpeg,audio/mp3,audio/ogg,audio/wav,audio/mp4" onChange={uploadAudio} hidden />
         <button type="button" className="portfolio-upload-btn" disabled={audioBusy} onClick={() => audioInput.current?.click()}>
-          {audioBusy ? 'Mengunggah lagu…' : 'Unggah lagu pengantar'}
+          {audioBusy ? `Mengunggah lagu… ${uploadProgress ?? 0}%` : 'Unggah lagu pengantar'}
         </button>
         {form.music_url && <button type="button" className="portfolio-photo-remove" onClick={() => setForm({ ...form, music_url: '' })}>Hapus lagu</button>}
-        <span className="portfolio-upload-note">MP3/OGG/WAV, maksimal 14 MB — diunggah bertahap agar lolos batas server.</span>
+        <span className="portfolio-upload-note">MP3/OGG/WAV, maksimal 30 MB — diunggah bertahap agar lolos batas server.</span>
       </div>
       <label>Video cuplikan (opsional)
         <input value={form.intro_video || ''} placeholder="/video/teaser-lamaran-16x9.mp4 atau URL video" onChange={(e) => setForm({ ...form, intro_video: e.target.value })} />
@@ -350,10 +364,10 @@ const PortfolioManager = ({ channel }) => {
       <div className="portfolio-upload-row">
         <input ref={videoInput} type="file" accept="video/mp4,video/webm,video/ogg" onChange={uploadVideo} hidden />
         <button type="button" className="portfolio-upload-btn" disabled={videoBusy} onClick={() => videoInput.current?.click()}>
-          {videoBusy ? 'Mengunggah video…' : 'Unggah video cuplikan'}
+          {videoBusy ? `Mengunggah video… ${uploadProgress ?? 0}%` : 'Unggah video cuplikan'}
         </button>
         {form.intro_video && <button type="button" className="portfolio-photo-remove" onClick={() => setForm({ ...form, intro_video: '' })}>Hapus video</button>}
-        <span className="portfolio-upload-note">MP4/WebM, maksimal 14 MB — diunggah bertahap agar lolos batas server.</span>
+        <span className="portfolio-upload-note">MP4/WebM, maksimal 100 MB — diunggah bertahap agar lolos batas server.</span>
       </div>
       <label className="portfolio-publish"><input type="checkbox" checked={form.published} onChange={(e) => setForm({ ...form, published: e.target.checked })} /> Tampilkan di portfolio publik</label>
       <div className="portfolio-form-actions"><button className="admin-card-btn admin-card-btn-active" disabled={busy}>{busy ? 'Menyimpan…' : editing ? 'Simpan perubahan' : 'Simpan konten'}</button>{editing && <button type="button" onClick={cancelEdit}>Batal</button>}</div>{notice && <p role="status">{notice}</p>}

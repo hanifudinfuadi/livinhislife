@@ -37,7 +37,7 @@ db_ready = db is not None
 # On Vercel the filesystem is read-only, so uploads live in MongoDB and are
 # streamed through the /uploads and /api/media routes below.
 from fastapi.staticfiles import StaticFiles
-from fastapi.responses import JSONResponse, Response
+from fastapi.responses import JSONResponse, StreamingResponse
 
 import storage
 
@@ -50,10 +50,10 @@ if not storage.use_db_storage():
 @app.get("/uploads/{filename}")
 @app.get("/api/media/{filename}")
 async def serve_upload(filename: str):
-    data, content_type = await storage.load_upload(app.state.db, filename)
-    if data is None:
+    stream, content_type = await storage.open_upload(app.state.db, filename)
+    if stream is None:
         raise HTTPException(status_code=404, detail="Media tidak ditemukan")
-    return Response(content=data, media_type=content_type)
+    return StreamingResponse(stream, media_type=content_type)
 
 # Create a router with the /api prefix
 api_router = APIRouter(prefix="/api")

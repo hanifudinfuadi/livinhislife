@@ -10,12 +10,20 @@ import uuid
 from fastapi import APIRouter, Depends, File, Form, HTTPException, Request, UploadFile
 from pydantic import BaseModel
 from routes.auth import get_current_user, get_db
-from storage import media_url, save_upload
+from storage import media_url, save_upload, save_upload_path
 
 router = APIRouter(prefix="/portfolio", tags=["portfolio"])
 
 CHUNK_TMP = Path(tempfile.gettempdir()) / "portfolio-uploads"
-MAX_UPLOAD_BYTES = 14 * 1024 * 1024
+MAX_IMAGE_BYTES = 14 * 1024 * 1024
+MAX_VIDEO_BYTES = 100 * 1024 * 1024
+MAX_AUDIO_BYTES = 30 * 1024 * 1024
+
+MAX_UPLOAD_BYTES = {
+    "image": MAX_IMAGE_BYTES,
+    "video": MAX_VIDEO_BYTES,
+    "audio": MAX_AUDIO_BYTES,
+}
 ALLOWED_KINDS = {"documentation", "creative", "novel", "media"}
 
 
@@ -93,10 +101,10 @@ async def upload_media(
         if ext not in {".jpg", ".jpeg", ".png", ".webp", ".gif"}:
             raise HTTPException(status_code=400, detail="Format gambar tidak didukung")
         data = await file.read()
-        if len(data) > MAX_UPLOAD_BYTES:
+        if len(data) > MAX_IMAGE_BYTES:
             raise HTTPException(
                 status_code=413,
-                detail=f"Ukuran gambar melebihi batas {MAX_UPLOAD_BYTES // (1024 * 1024)} MB",
+                detail=f"Ukuran gambar melebihi batas {MAX_IMAGE_BYTES // (1024 * 1024)} MB",
             )
         filename = f"{uuid.uuid4().hex}{ext}"
         await save_upload(db, filename, data)
@@ -186,16 +194,27 @@ async def upload_finish(
     if not parts:
         raise HTTPException(status_code=400, detail="Sesi unggah tidak ditemukan atau kosong")
 
+    limit = MAX_UPLOAD_BYTES[kind]
     total = sum(part.stat().st_size for part in parts)
-    if total > MAX_UPLOAD_BYTES:
+    if total > limit:
         shutil.rmtree(folder, ignore_errors=True)
-        raise HTTPException(status_code=413, detail="Ukuran berkas melebihi batas 14 MB")
+        raise HTTPException(
+            status_code=413,
+            detail=f"Ukuran berkas melebihi batas {limit // (1024 * 1024)} MB untuk {kind}",
+        )
 
-    data = b"".join(part.read_bytes() for part in parts)
+    assembled = folder / "assembled.bin"
+    with open(assembled, "wb") as handle:
+        for part in parts:
+            with open(part, "rb") as chunk:
+                shutil.copyfileobj(chunk, handle)
+
     filename = f"{uuid.uuid4().hex}{ext}"
-    await save_upload(get_db(request), filename, data)
-    shutil.rmtree(folder, ignore_errors=True)
-    return {"url": media_url(filename), "name": payload.filename, "size": len(data)}
+    try:
+        await save_upload_path(get_db(request), filename, assembled)
+    finally:
+        shutil.rmtree(folder, ignore_errors=True)
+    return {"url": media_url(filename), "name": payload.filename, "size": total}
 
 
 @router.get("/settings")
