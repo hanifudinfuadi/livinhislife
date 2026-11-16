@@ -10,6 +10,7 @@ import WorksGrid from "./components/portfolio/WorksGrid";
 import WorkDetail from "./components/portfolio/WorkDetail";
 import Novel3DShowcase from "./components/portfolio/Novel3DShowcase";
 import ServicesSection from "./components/portfolio/ServicesSection";
+import DocumentationGallery from "./components/portfolio/DocumentationGallery";
 import FAQSection from "./components/portfolio/FAQSection";
 import JournalSection from "./components/portfolio/JournalSection";
 import ContactSection from "./components/portfolio/ContactSection";
@@ -30,6 +31,7 @@ function PortfolioHome() {
       <WorksGrid />
       <Novel3DShowcase />
       <ServicesSection />
+      <DocumentationGallery />
       <FAQSection />
       <JournalSection />
       <ContactSection />
