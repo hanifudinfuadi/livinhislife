@@ -121,7 +121,12 @@ const PortfolioManager = ({ channel }) => {
     setNotice('');
     try {
       const uploaded = await uploadInParts(file, 'audio');
-      setForm((current) => ({ ...current, music_url: uploaded.url || '' }));
+      setForm((current) => ({
+        ...current,
+        music_url: uploaded.url || '',
+        music_title:
+          current.music_title || String(uploaded.name || '').replace(/\.[^.]+$/, '') || '',
+      }));
       setNotice('Lagu pengantar berhasil diunggah.');
     } catch (error) {
       setNotice(error.message);
