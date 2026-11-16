@@ -91,6 +91,22 @@ async def upload_media(
     return results
 
 
+@router.post("/upload-video")
+async def upload_video(
+    request: Request,
+    file: UploadFile = File(...),
+    user=Depends(get_current_user),
+):
+    if not file.content_type or not file.content_type.startswith("video/"):
+        raise HTTPException(status_code=400, detail="Berkas harus berupa video")
+    ext = Path(file.filename or "video.mp4").suffix.lower()
+    if ext not in {".mp4", ".webm", ".ogg"}:
+        raise HTTPException(status_code=400, detail="Format video tidak didukung")
+    filename = f"{uuid.uuid4().hex}{ext}"
+    await save_upload(get_db(request), filename, await file.read())
+    return {"video_url": media_url(filename), "name": file.filename}
+
+
 @router.get("/settings")
 async def get_settings(request: Request):
     doc = await request.app.state.db.portfolio_settings.find_one({"key": "main"}, {"_id": 0})

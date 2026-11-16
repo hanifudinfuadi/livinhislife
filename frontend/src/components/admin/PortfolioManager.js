@@ -25,6 +25,8 @@ const PortfolioManager = ({ channel }) => {
   const [cropper, setCropper] = useState(null);
   const [dragIndex, setDragIndex] = useState(null);
   const fileInput = useRef(null);
+  const videoInput = useRef(null);
+  const [videoBusy, setVideoBusy] = useState(false);
 
   const resolveUrl = (url) => (!url ? '' : url.startsWith('http') ? url : `${API}${url}`);
 
@@ -56,6 +58,31 @@ const PortfolioManager = ({ channel }) => {
     if (!response.ok) throw new Error(await describeUploadError(response));
     const uploaded = await response.json();
     return uploaded[0]?.url || '';
+  };
+
+  const uploadVideo = async (event) => {
+    const file = (event.target.files || [])[0];
+    event.target.value = '';
+    if (!file) return;
+    if (file.size > 4 * 1024 * 1024) {
+      setNotice('Video lebih dari 4 MB. Server Vercel menolak unggahan besar — kecilkan dulu videonya.');
+      return;
+    }
+    setVideoBusy(true);
+    setNotice('');
+    try {
+      const data = new FormData();
+      data.append('file', file);
+      const response = await fetch(`${API}/api/portfolio/upload-video`, { method: 'POST', body: data, credentials: 'include' });
+      if (!response.ok) throw new Error(await describeUploadError(response));
+      const uploaded = await response.json();
+      setForm((current) => ({ ...current, intro_video: uploaded.video_url || '' }));
+      setNotice('Video cuplikan berhasil diunggah.');
+    } catch (error) {
+      setNotice(error.message);
+    } finally {
+      setVideoBusy(false);
+    }
   };
 
   const startNextCrop = (remaining) => {
@@ -254,7 +281,17 @@ const PortfolioManager = ({ channel }) => {
 
       {kind === 'novel' && <div className="portfolio-extra-fields"><label>Jumlah halaman<input value={form.metadata.pages || ''} onChange={(e) => setForm({ ...form, metadata: { ...form.metadata, pages: e.target.value } })} /></label><label>ISBN<input value={form.metadata.isbn || ''} onChange={(e) => setForm({ ...form, metadata: { ...form.metadata, isbn: e.target.value } })} /></label><label>Penerbit<input value={form.metadata.publisher || ''} onChange={(e) => setForm({ ...form, metadata: { ...form.metadata, publisher: e.target.value } })} /></label><label>Tautan pemesanan<input value={form.metadata.order_url || ''} onChange={(e) => setForm({ ...form, metadata: { ...form.metadata, order_url: e.target.value } })} /></label></div>}
       <label>Lagu pengantar (opsional)<input value={form.music_url || ''} placeholder="Kosongkan untuk memakai lagu bawaan, atau isi URL audio" onChange={(e) => setForm({ ...form, music_url: e.target.value })} /></label>
-      <label>Video cuplikan (opsional)<input value={form.intro_video || ''} placeholder="/video/teaser-lamaran-16x9.mp4 atau URL video" onChange={(e) => setForm({ ...form, intro_video: e.target.value })} /></label>
+      <label>Video cuplikan (opsional)
+        <input value={form.intro_video || ''} placeholder="/video/teaser-lamaran-16x9.mp4 atau URL video" onChange={(e) => setForm({ ...form, intro_video: e.target.value })} />
+      </label>
+      <div className="portfolio-upload-row">
+        <input ref={videoInput} type="file" accept="video/mp4,video/webm,video/ogg" onChange={uploadVideo} hidden />
+        <button type="button" className="portfolio-upload-btn" disabled={videoBusy} onClick={() => videoInput.current?.click()}>
+          {videoBusy ? 'Mengunggah video…' : 'Unggah video cuplikan'}
+        </button>
+        {form.intro_video && <button type="button" className="portfolio-photo-remove" onClick={() => setForm({ ...form, intro_video: '' })}>Hapus video</button>}
+        <span className="portfolio-upload-note">Format MP4/WebM, maksimal 4 MB agar lolos batas server.</span>
+      </div>
       <label className="portfolio-publish"><input type="checkbox" checked={form.published} onChange={(e) => setForm({ ...form, published: e.target.checked })} /> Tampilkan di portfolio publik</label>
       <div className="portfolio-form-actions"><button className="admin-card-btn admin-card-btn-active" disabled={busy}>{busy ? 'Menyimpan…' : editing ? 'Simpan perubahan' : 'Simpan konten'}</button>{editing && <button type="button" onClick={cancelEdit}>Batal</button>}</div>{notice && <p role="status">{notice}</p>}
     </form>
