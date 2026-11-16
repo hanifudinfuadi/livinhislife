@@ -11,6 +11,10 @@ const categories = [
 ];
 const fresh = { title: '', category: '', description: '', body: '', images: [], metadata: {}, published: false, music_url: '', intro_video: '' };
 
+const CHUNK_SIZE = 3 * 1024 * 1024;
+const MAX_UPLOAD_BYTES = 14 * 1024 * 1024;
+const MAX_UPLOAD_MB = 14;
+
 const PortfolioManager = ({ channel }) => {
   const [kind, setKind] = useState('documentation');
   const [items, setItems] = useState([]);
@@ -27,6 +31,8 @@ const PortfolioManager = ({ channel }) => {
   const fileInput = useRef(null);
   const videoInput = useRef(null);
   const [videoBusy, setVideoBusy] = useState(false);
+  const audioInput = useRef(null);
+  const [audioBusy, setAudioBusy] = useState(false);
 
   const resolveUrl = (url) => (!url ? '' : url.startsWith('http') ? url : `${API}${url}`);
 
@@ -60,28 +66,67 @@ const PortfolioManager = ({ channel }) => {
     return uploaded[0]?.url || '';
   };
 
+  const uploadInParts = async (file, kind) => {
+    const uploadId = `${Date.now()}-${Math.random().toString(36).slice(2, 10)}`;
+    const total = Math.max(1, Math.ceil(file.size / CHUNK_SIZE));
+    for (let index = 0; index < total; index += 1) {
+      const chunk = file.slice(index * CHUNK_SIZE, Math.min(file.size, (index + 1) * CHUNK_SIZE));
+      const data = new FormData();
+      data.append('upload_id', uploadId);
+      data.append('index', String(index));
+      data.append('file', chunk, `part-${index}.bin`);
+      const response = await fetch(`${API}/api/portfolio/upload-part`, { method: 'POST', body: data, credentials: 'include' });
+      if (!response.ok) throw new Error(await describeUploadError(response));
+    }
+    const response = await fetch(`${API}/api/portfolio/upload-finish`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
+      body: JSON.stringify({ upload_id: uploadId, kind, filename: file.name, content_type: file.type }),
+    });
+    if (!response.ok) throw new Error(await describeUploadError(response));
+    return response.json();
+  };
+
   const uploadVideo = async (event) => {
     const file = (event.target.files || [])[0];
     event.target.value = '';
     if (!file) return;
-    if (file.size > 4 * 1024 * 1024) {
-      setNotice('Video lebih dari 4 MB. Server Vercel menolak unggahan besar — kecilkan dulu videonya.');
+    if (file.size > MAX_UPLOAD_BYTES) {
+      setNotice(`Video lebih dari ${MAX_UPLOAD_MB} MB. Gunakan URL video (YouTube/Vimeo) atau kecilkan resolusinya.`);
       return;
     }
     setVideoBusy(true);
     setNotice('');
     try {
-      const data = new FormData();
-      data.append('file', file);
-      const response = await fetch(`${API}/api/portfolio/upload-video`, { method: 'POST', body: data, credentials: 'include' });
-      if (!response.ok) throw new Error(await describeUploadError(response));
-      const uploaded = await response.json();
-      setForm((current) => ({ ...current, intro_video: uploaded.video_url || '' }));
+      const uploaded = await uploadInParts(file, 'video');
+      setForm((current) => ({ ...current, intro_video: uploaded.url || '' }));
       setNotice('Video cuplikan berhasil diunggah.');
     } catch (error) {
       setNotice(error.message);
     } finally {
       setVideoBusy(false);
+    }
+  };
+
+  const uploadAudio = async (event) => {
+    const file = (event.target.files || [])[0];
+    event.target.value = '';
+    if (!file) return;
+    if (file.size > MAX_UPLOAD_BYTES) {
+      setNotice(`Lagu lebih dari ${MAX_UPLOAD_MB} MB. Kecilkan bitrate MP3-nya (mis. 128 kbps).`);
+      return;
+    }
+    setAudioBusy(true);
+    setNotice('');
+    try {
+      const uploaded = await uploadInParts(file, 'audio');
+      setForm((current) => ({ ...current, music_url: uploaded.url || '' }));
+      setNotice('Lagu pengantar berhasil diunggah.');
+    } catch (error) {
+      setNotice(error.message);
+    } finally {
+      setAudioBusy(false);
     }
   };
 
@@ -280,7 +325,17 @@ const PortfolioManager = ({ channel }) => {
       )}
 
       {kind === 'novel' && <div className="portfolio-extra-fields"><label>Jumlah halaman<input value={form.metadata.pages || ''} onChange={(e) => setForm({ ...form, metadata: { ...form.metadata, pages: e.target.value } })} /></label><label>ISBN<input value={form.metadata.isbn || ''} onChange={(e) => setForm({ ...form, metadata: { ...form.metadata, isbn: e.target.value } })} /></label><label>Penerbit<input value={form.metadata.publisher || ''} onChange={(e) => setForm({ ...form, metadata: { ...form.metadata, publisher: e.target.value } })} /></label><label>Tautan pemesanan<input value={form.metadata.order_url || ''} onChange={(e) => setForm({ ...form, metadata: { ...form.metadata, order_url: e.target.value } })} /></label></div>}
-      <label>Lagu pengantar (opsional)<input value={form.music_url || ''} placeholder="Kosongkan untuk memakai lagu bawaan, atau isi URL audio" onChange={(e) => setForm({ ...form, music_url: e.target.value })} /></label>
+      <label>Lagu pengantar (opsional)
+        <input value={form.music_url || ''} placeholder="Kosongkan untuk memakai lagu bawaan, atau isi URL audio" onChange={(e) => setForm({ ...form, music_url: e.target.value })} />
+      </label>
+      <div className="portfolio-upload-row">
+        <input ref={audioInput} type="file" accept="audio/mpeg,audio/mp3,audio/ogg,audio/wav,audio/mp4" onChange={uploadAudio} hidden />
+        <button type="button" className="portfolio-upload-btn" disabled={audioBusy} onClick={() => audioInput.current?.click()}>
+          {audioBusy ? 'Mengunggah lagu…' : 'Unggah lagu pengantar'}
+        </button>
+        {form.music_url && <button type="button" className="portfolio-photo-remove" onClick={() => setForm({ ...form, music_url: '' })}>Hapus lagu</button>}
+        <span className="portfolio-upload-note">MP3/OGG/WAV, maksimal 14 MB — diunggah bertahap agar lolos batas server.</span>
+      </div>
       <label>Video cuplikan (opsional)
         <input value={form.intro_video || ''} placeholder="/video/teaser-lamaran-16x9.mp4 atau URL video" onChange={(e) => setForm({ ...form, intro_video: e.target.value })} />
       </label>
@@ -290,7 +345,7 @@ const PortfolioManager = ({ channel }) => {
           {videoBusy ? 'Mengunggah video…' : 'Unggah video cuplikan'}
         </button>
         {form.intro_video && <button type="button" className="portfolio-photo-remove" onClick={() => setForm({ ...form, intro_video: '' })}>Hapus video</button>}
-        <span className="portfolio-upload-note">Format MP4/WebM, maksimal 4 MB agar lolos batas server.</span>
+        <span className="portfolio-upload-note">MP4/WebM, maksimal 14 MB — diunggah bertahap agar lolos batas server.</span>
       </div>
       <label className="portfolio-publish"><input type="checkbox" checked={form.published} onChange={(e) => setForm({ ...form, published: e.target.checked })} /> Tampilkan di portfolio publik</label>
       <div className="portfolio-form-actions"><button className="admin-card-btn admin-card-btn-active" disabled={busy}>{busy ? 'Menyimpan…' : editing ? 'Simpan perubahan' : 'Simpan konten'}</button>{editing && <button type="button" onClick={cancelEdit}>Batal</button>}</div>{notice && <p role="status">{notice}</p>}

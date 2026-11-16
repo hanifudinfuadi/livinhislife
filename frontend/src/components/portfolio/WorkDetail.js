@@ -14,7 +14,7 @@ const resolveUrl = (url) => {
   return `${API}${url}`;
 };
 
-const resolveVideoUrl = (url) => {
+const resolveMediaUrl = (url) => {
   if (!url) return '';
   if (url.startsWith('http')) return url;
   if (url.startsWith('/api/') || url.startsWith('/uploads/')) return `${API}${url}`;
@@ -67,9 +67,10 @@ const WorkDetail = () => {
 
   const images = (item?.images || []).map(resolveUrl).filter(Boolean);
   const isDocumentation = !item?.kind || item.kind === 'documentation' || item.kind === 'media';
-  const musicUrl =
-    item?.music_url || item?.metadata?.music_url || (isDocumentation ? DEFAULT_MUSIC : '');
-  const videoUrl = resolveVideoUrl(item?.intro_video || item?.metadata?.intro_video || '');
+  const musicUrl = resolveMediaUrl(
+    item?.music_url || item?.metadata?.music_url || (isDocumentation ? DEFAULT_MUSIC : '')
+  );
+  const videoUrl = resolveMediaUrl(item?.intro_video || item?.metadata?.intro_video || '');
   const paragraphs = splitParagraphs(item?.body);
   const summary = item?.description || '';
 

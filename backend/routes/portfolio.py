@@ -1,10 +1,13 @@
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Optional
+import re
 import shutil
+import tempfile
+import time
 import uuid
 
-from fastapi import APIRouter, Depends, File, HTTPException, Request, UploadFile
+from fastapi import APIRouter, Depends, File, Form, HTTPException, Request, UploadFile
 from pydantic import BaseModel
 from routes.auth import get_current_user, get_db
 from storage import media_url, save_upload
@@ -91,20 +94,101 @@ async def upload_media(
     return results
 
 
-@router.post("/upload-video")
-async def upload_video(
+CHUNK_TMP = Path(tempfile.gettempdir()) / "portfolio-uploads"
+MAX_UPLOAD_BYTES = 14 * 1024 * 1024
+
+ALLOWED_EXT = {
+    "image": {".jpg", ".jpeg", ".png", ".webp", ".gif"},
+    "video": {".mp4", ".webm", ".ogg"},
+    "audio": {".mp3", ".ogg", ".wav", ".m4a", ".aac"},
+}
+
+ALLOWED_MIME = {
+    "image": ("image/",),
+    "video": ("video/",),
+    "audio": ("audio/",),
+}
+
+
+class FinishUpload(BaseModel):
+    upload_id: str
+    kind: str
+    filename: str
+    content_type: Optional[str] = ""
+
+
+def _chunk_dir(upload_id: str) -> Path:
+    safe = re.sub(r"[^A-Za-z0-9_-]", "", upload_id or "")[:80]
+    if not safe:
+        raise HTTPException(status_code=400, detail="ID unggah tidak valid")
+    return CHUNK_TMP / safe
+
+
+def _prune_chunks(max_age_seconds: int = 7200) -> None:
+    now = time.time()
+    try:
+        entries = list(CHUNK_TMP.iterdir())
+    except OSError:
+        return
+    for entry in entries:
+        try:
+            if entry.is_dir() and now - entry.stat().st_mtime > max_age_seconds:
+                shutil.rmtree(entry, ignore_errors=True)
+        except OSError:
+            continue
+
+
+@router.post("/upload-part")
+async def upload_part(
     request: Request,
+    upload_id: str = Form(...),
+    index: int = Form(...),
     file: UploadFile = File(...),
     user=Depends(get_current_user),
 ):
-    if not file.content_type or not file.content_type.startswith("video/"):
-        raise HTTPException(status_code=400, detail="Berkas harus berupa video")
-    ext = Path(file.filename or "video.mp4").suffix.lower()
-    if ext not in {".mp4", ".webm", ".ogg"}:
-        raise HTTPException(status_code=400, detail="Format video tidak didukung")
+    if index < 0 or index > 5000:
+        raise HTTPException(status_code=400, detail="Indeks bagian tidak valid")
+    data = await file.read()
+    if not data:
+        raise HTTPException(status_code=400, detail="Bagian unggahan kosong")
+    _prune_chunks()
+    target = _chunk_dir(upload_id) / f"{index:05d}.part"
+    target.parent.mkdir(parents=True, exist_ok=True)
+    target.write_bytes(data)
+    return {"ok": True, "index": index, "size": len(data)}
+
+
+@router.post("/upload-finish")
+async def upload_finish(
+    request: Request,
+    payload: FinishUpload,
+    user=Depends(get_current_user),
+):
+    kind = payload.kind
+    ext = Path(payload.filename or "").suffix.lower()
+    if kind not in ALLOWED_EXT:
+        raise HTTPException(status_code=400, detail="Jenis unggahan tidak valid")
+    if ext not in ALLOWED_EXT[kind]:
+        raise HTTPException(status_code=400, detail=f"Format {kind} tidak didukung")
+    mime = (payload.content_type or "").lower()
+    if mime and not any(mime.startswith(prefix) for prefix in ALLOWED_MIME[kind]):
+        raise HTTPException(status_code=400, detail=f"Berkas harus berupa {kind}")
+
+    folder = _chunk_dir(payload.upload_id)
+    parts = sorted(folder.glob("*.part")) if folder.is_dir() else []
+    if not parts:
+        raise HTTPException(status_code=400, detail="Sesi unggah tidak ditemukan atau kosong")
+
+    total = sum(part.stat().st_size for part in parts)
+    if total > MAX_UPLOAD_BYTES:
+        shutil.rmtree(folder, ignore_errors=True)
+        raise HTTPException(status_code=413, detail="Ukuran berkas melebihi batas 14 MB")
+
+    data = b"".join(part.read_bytes() for part in parts)
     filename = f"{uuid.uuid4().hex}{ext}"
-    await save_upload(get_db(request), filename, await file.read())
-    return {"video_url": media_url(filename), "name": file.filename}
+    await save_upload(get_db(request), filename, data)
+    shutil.rmtree(folder, ignore_errors=True)
+    return {"url": media_url(filename), "name": payload.filename, "size": len(data)}
 
 
 @router.get("/settings")
