@@ -13,6 +13,9 @@ from routes.auth import get_current_user, get_db
 from storage import media_url, save_upload
 
 router = APIRouter(prefix="/portfolio", tags=["portfolio"])
+
+CHUNK_TMP = Path(tempfile.gettempdir()) / "portfolio-uploads"
+MAX_UPLOAD_BYTES = 14 * 1024 * 1024
 ALLOWED_KINDS = {"documentation", "creative", "novel", "media"}
 
 
@@ -88,14 +91,17 @@ async def upload_media(
         ext = Path(file.filename or "image.jpg").suffix.lower()
         if ext not in {".jpg", ".jpeg", ".png", ".webp", ".gif"}:
             raise HTTPException(status_code=400, detail="Format gambar tidak didukung")
+        data = await file.read()
+        if len(data) > MAX_UPLOAD_BYTES:
+            raise HTTPException(
+                status_code=413,
+                detail=f"Ukuran gambar melebihi batas {MAX_UPLOAD_BYTES // (1024 * 1024)} MB",
+            )
         filename = f"{uuid.uuid4().hex}{ext}"
-        await save_upload(db, filename, await file.read())
+        await save_upload(db, filename, data)
         results.append({"url": media_url(filename), "name": file.filename})
     return results
 
-
-CHUNK_TMP = Path(tempfile.gettempdir()) / "portfolio-uploads"
-MAX_UPLOAD_BYTES = 14 * 1024 * 1024
 
 ALLOWED_EXT = {
     "image": {".jpg", ".jpeg", ".png", ".webp", ".gif"},
