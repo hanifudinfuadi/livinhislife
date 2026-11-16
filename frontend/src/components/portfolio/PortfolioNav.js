@@ -1,14 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { LogIn } from 'lucide-react';
-import { MetalButton } from '../ui/metal-button';
 import './PortfolioNav.css';
 
 const PortfolioNav = () => {
   const [isScrolled, setIsScrolled] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [activeSection, setActiveSection] = useState('about');
-  const navigate = useNavigate();
 
   // Define navigation links explicitly
   const navLinks = [
@@ -68,20 +64,6 @@ const PortfolioNav = () => {
           <span></span>
         </button>
 
-        {/* Metal CTA — hidden on small screens, sits left of the mobile toggle */}
-        <div className="nav-cta hidden md:block">
-          <MetalButton
-            size="sm"
-            preset="silver"
-            theme="light"
-            className="nav-cta-btn"
-            onClick={() => navigate('/login')}
-            aria-label="Masuk ke halaman admin"
-          >
-            <LogIn className="size-4" />
-            Masuk
-          </MetalButton>
-        </div>
       </div>
     </nav>
   );
