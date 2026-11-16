@@ -9,7 +9,7 @@ const categories = [
   { kind: 'creative', label: 'Tulisan Kreatif' },
   { kind: 'novel', label: 'Novel Resmi' },
 ];
-const fresh = { title: '', category: '', description: '', body: '', images: [], metadata: {}, published: false, music_url: '', intro_video: '' };
+const fresh = { title: '', category: '', description: '', body: '', images: [], metadata: {}, published: false, music_url: '', music_title: '', intro_video: '' };
 
 const CHUNK_SIZE = 3 * 1024 * 1024;
 const MAX_UPLOAD_BYTES = 14 * 1024 * 1024;
@@ -241,7 +241,7 @@ const PortfolioManager = ({ channel }) => {
   const edit = (item) => {
     setEditing(item.content_id);
     setEditingTitle(item.title || '');
-    setForm({ title: item.title, category: item.category, description: item.description || '', body: item.body || '', images: item.images || [], metadata: item.metadata || {}, published: item.published, music_url: item.music_url || '', intro_video: item.intro_video || '' });
+    setForm({ title: item.title, category: item.category, description: item.description || '', body: item.body || '', images: item.images || [], metadata: item.metadata || {}, published: item.published, music_url: item.music_url || '', music_title: item.music_title || '', intro_video: item.intro_video || '' });
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
@@ -327,6 +327,9 @@ const PortfolioManager = ({ channel }) => {
       {kind === 'novel' && <div className="portfolio-extra-fields"><label>Jumlah halaman<input value={form.metadata.pages || ''} onChange={(e) => setForm({ ...form, metadata: { ...form.metadata, pages: e.target.value } })} /></label><label>ISBN<input value={form.metadata.isbn || ''} onChange={(e) => setForm({ ...form, metadata: { ...form.metadata, isbn: e.target.value } })} /></label><label>Penerbit<input value={form.metadata.publisher || ''} onChange={(e) => setForm({ ...form, metadata: { ...form.metadata, publisher: e.target.value } })} /></label><label>Tautan pemesanan<input value={form.metadata.order_url || ''} onChange={(e) => setForm({ ...form, metadata: { ...form.metadata, order_url: e.target.value } })} /></label></div>}
       <label>Lagu pengantar (opsional)
         <input value={form.music_url || ''} placeholder="Kosongkan untuk memakai lagu bawaan, atau isi URL audio" onChange={(e) => setForm({ ...form, music_url: e.target.value })} />
+      </label>
+      <label>Judul lagu pengantar (opsional)
+        <input value={form.music_title || ''} placeholder="Kosongkan untuk memakai “Dengarkan Hatiku”" onChange={(e) => setForm({ ...form, music_title: e.target.value })} />
       </label>
       <div className="portfolio-upload-row">
         <input ref={audioInput} type="file" accept="audio/mpeg,audio/mp3,audio/ogg,audio/wav,audio/mp4" onChange={uploadAudio} hidden />

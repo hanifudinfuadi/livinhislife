@@ -28,6 +28,7 @@ class ContentInput(BaseModel):
     metadata: dict = {}
     published: bool = False
     music_url: Optional[str] = ""
+    music_title: Optional[str] = ""
     intro_video: Optional[str] = ""
 
 

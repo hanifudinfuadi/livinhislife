@@ -270,21 +270,6 @@ const WorkDetail = () => {
     <div className="work-detail">
       <PortfolioNav />
 
-      {/* === TEASER VIDEO INSERTED HERE === */}
-      <div className="wd-teaser-video" style={{width: '100%', maxWidth: '900px', margin: '0 auto 2rem'}}>
-        <video
-          src="/Teaser_Lamaran_16x9_Web.mp4"
-          style={{width: '100%', borderRadius: '1em', boxShadow: '0 4px 32px #0004'}}
-          autoPlay
-          muted
-          loop
-          playsInline
-          controls={false}
-          aria-label="Cuplikan awal video"
-        />
-      </div>
-      {/* === END TEASER VIDEO === */}
-
       <article className="wd-hero">
         <div className="wd-hero-inner">
           <Link className="wd-back-link" to="/portfolio#works">
