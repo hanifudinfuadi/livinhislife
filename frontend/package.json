@@ -2,6 +2,7 @@
   "name": "glass-flower-galaxy-portfolio",
   "version": "1.0.0",
   "private": true,
+  "packageManager": "yarn@1.22.22",
   "dependencies": {
     "@react-three/drei": "^10.7.9",
     "@react-three/fiber": "^9.8.2",
