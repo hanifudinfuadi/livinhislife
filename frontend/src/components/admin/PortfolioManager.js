@@ -9,7 +9,14 @@ const categories = [
   { kind: 'creative', label: 'Tulisan Kreatif' },
   { kind: 'novel', label: 'Novel Resmi' },
 ];
-const fresh = { title: '', category: '', description: '', body: '', images: [], metadata: {}, published: false, music_url: '', music_title: '', intro_video: '' };
+const fresh = { title: '', category: '', description: '', body: '', images: [], metadata: {}, published: false, music_url: '', music_title: '', intro_video: '', font: '' };
+
+const FONTS = [
+  { value: '', label: 'Bawaan (Georgia)', family: 'Georgia, Times New Roman, serif' },
+  { value: 'lora', label: 'Lora', family: "'Lora', Georgia, Times New Roman, serif" },
+  { value: 'plus-jakarta', label: 'Plus Jakarta Sans', family: "'Plus Jakarta Sans', system-ui, sans-serif" },
+  { value: 'merriweather', label: 'Merriweather', family: "'Merriweather', Georgia, Times New Roman, serif" },
+];
 
 const CHUNK_SIZE = 3 * 1024 * 1024;
 const LIMITS = {
@@ -260,7 +267,7 @@ const PortfolioManager = ({ channel }) => {
   const edit = (item) => {
     setEditing(item.content_id);
     setEditingTitle(item.title || '');
-    setForm({ title: item.title, category: item.category, description: item.description || '', body: item.body || '', images: item.images || [], metadata: item.metadata || {}, published: item.published, music_url: item.music_url || '', music_title: item.music_title || '', intro_video: item.intro_video || '' });
+    setForm({ title: item.title, category: item.category, description: item.description || '', body: item.body || '', images: item.images || [], metadata: item.metadata || {}, published: item.published, music_url: item.music_url || '', music_title: item.music_title || '', intro_video: item.intro_video || '', font: item.font || '' });
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
@@ -303,6 +310,14 @@ const PortfolioManager = ({ channel }) => {
     <form className="portfolio-form" onSubmit={save}>
       <label>Judul<input required value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })} /></label>
       <label>{mediaMode ? 'Nama koleksi' : 'Kategori'}<input required value={form.category} placeholder={kind === 'documentation' ? 'Wedding, lamaran, perjalanan…' : kind === 'creative' ? 'Novel, cerpen, puisi, esai…' : 'Fiksi religi, fiksi kontemporer…'} onChange={(e) => setForm({ ...form, category: e.target.value })} /></label>
+      <label>Jenis font (opsional)
+        <select value={form.font || ''} onChange={(e) => setForm({ ...form, font: e.target.value })}>
+          <option value="">Bawaan (Georgia)</option>
+          {FONTS.map((entry) => (
+            <option key={entry.value} value={entry.value}>{entry.label}</option>
+          ))}
+        </select>
+      </label>
       <label>Ringkasan<textarea rows="3" value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} /></label>
       <label>Isi / cerita lengkap<textarea rows="8" value={form.body} onChange={(e) => setForm({ ...form, body: e.target.value })} /></label>
 

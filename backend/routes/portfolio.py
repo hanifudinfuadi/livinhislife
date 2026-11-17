@@ -38,6 +38,7 @@ class ContentInput(BaseModel):
     music_url: Optional[str] = ""
     music_title: Optional[str] = ""
     intro_video: Optional[str] = ""
+    font: Optional[str] = ""
 
 
 @router.get("/content")

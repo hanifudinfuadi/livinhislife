@@ -27,6 +27,12 @@ const splitParagraphs = (text) =>
     .map((part) => part.trim())
     .filter(Boolean);
 
+const FONT_CLASSES = {
+  lora: 'wd-detail--font-lora',
+  'plus-jakarta': 'wd-detail--font-plus-jakarta',
+  merriweather: 'wd-detail--font-merriweather',
+};
+
 const WorkDetail = () => {
   const { contentId } = useParams();
   const [item, setItem] = useState(null);
@@ -267,7 +273,7 @@ const WorkDetail = () => {
   }
 
   return (
-    <div className="work-detail">
+    <div className={`work-detail ${FONT_CLASSES[item?.font] || ''}`}>
       <PortfolioNav />
 
       <article className="wd-hero">
