@@ -116,7 +116,6 @@ const JournalSection = () => {
   }, [musicTrack, musicMuted]);
 
 
-
   // Cuplikan video otomatis diputar saat catatan dibuka.
   useEffect(() => {
     const video = videoRef.current;
@@ -178,25 +177,30 @@ const JournalSection = () => {
         <div className="articles-grid">
           {articles.map((article, index) => {
             const hasBody = Boolean(String(article.body || '').trim());
-            const active = hasBody || article.intro_video || article.music_url || article.image_url;
+            const active = hasBody || article.image_url;
             return (
               <article
                 className={`article-card ${fontClass(article)}`}
                 key={article.article_id || index}
                 style={{ animationDelay: `${0.1 * index}s` }}
               >
+                {article.image_url && (
+                  <div className="article-image-wrapper">
+                    <img
+                      className="article-image"
+                      src={mediaUrl(article.image_url)}
+                      alt={article.title}
+                    />
+                  </div>
+                )}
                 <div className="article-content">
                   <span className="article-label">{article.category || 'Catatan'}</span>
                   <h3 className="article-title">{article.title}</h3>
                   {article.excerpt && <p className="article-description">{article.excerpt}</p>}
-                  <div className="article-media-badges">
-                    {article.intro_video && <span className="article-media-badge">🎬 Cuplikan video</span>}
-                    {article.music_url && <span className="article-media-badge">🎵 Lagu pengantar</span>}
-                  </div>
                   {active && (
                     <button
                       className="article-link"
-                      onClick={() => { setVideoMuted(true); setSelectedArticle(article); }}
+                      onClick={() => setSelectedArticle(article)}
                     >
                       {hasBody ? 'Baca selengkapnya →' : 'Buka catatan →'}
                     </button>
@@ -230,6 +234,9 @@ const JournalSection = () => {
             </button>
             <span className="article-label">{selectedArticle.category || 'Catatan'}</span>
             <h2 id="article-modal-title">{selectedArticle.title}</h2>
+            {selectedArticle.excerpt && (
+              <p className="article-modal-excerpt">{selectedArticle.excerpt}</p>
+            )}
             {musicTrack && (
               <div className="article-modal-music">
                 <button
