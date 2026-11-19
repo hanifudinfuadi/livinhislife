@@ -1,183 +1,145 @@
-from fastapi import FastAPI, APIRouter, HTTPException, Request
-from dotenv import load_dotenv
-from starlette.middleware.cors import CORSMiddleware
-from motor.motor_asyncio import AsyncIOMotorClient
-import os
+"""Portfolio Backend Server for FastAPI with MongoDB storage."""
 import asyncio
-import logging
 from pathlib import Path
-from pydantic import BaseModel, Field
-from typing import List
-import uuid
-from datetime import datetime
 
-# CRITICAL: Load environment variables FIRST before importing routes
+from dotenv import load_dotenv
+from fastapi import FastAPI, Request, HTTPException
+from fastapi.staticfiles import StaticFiles
+from motor.motor_asyncio import AsyncIOMotorClient
+from starlette.middleware.cors import CORSMiddleware
+
 ROOT_DIR = Path(__file__).parent
 load_dotenv(ROOT_DIR / '.env')
 
-# Now import routes (they can safely read env vars at module level)
-from routes.auth import router as auth_router
-from routes.ai import router as ai_router
-from routes.articles import router as articles_router
-from routes.portfolio import router as portfolio_router
+# MongoDB connection setup
+mongo_url = os.environ.get('MONGO_URL', 'mongodb://localhost:27017').strip()
+db_name = os.environ.get('DB_NAME', 'hanif_portfolio').strip()
 
-# MongoDB connection
-mongo_url = os.environ.get('MONGO_URL', '').strip()
-client = AsyncIOMotorClient(mongo_url, serverSelectionTimeoutMS=8000) if mongo_url else None
-db = client[os.environ.get('DB_NAME', 'portfolio')] if client else None
+import os
+client = AsyncIOMotorClient(mongo_url, serverSelectionTimeoutMS=8000)
+db = client[db_name]
 
 # Create the main app
-app = FastAPI()
+app = FastAPI(title="Portfolio Backend")
+
+# CORS middleware - crucial for frontend-backend communication
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=[
+        "http://localhost:3000",
+        os.environ.get('FRONTEND_ORIGINS', 'http://localhost:3000')
+        .split(',')
+        .strip() if hasattr(os, 'environ') else ["*"]
+    ],
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 # Store db in app state for route access
 app.state.db = db
-db_ready = db is not None
 
-# Static file serving for uploaded assets (images).
-# On Vercel the filesystem is read-only, so uploads live in MongoDB and are
-# streamed through the /uploads and /api/media routes below.
-import re
-from fastapi.staticfiles import StaticFiles
-from fastapi.responses import JSONResponse, Response, StreamingResponse
+# Storage configuration - CRITICAL for Vercel: use DB storage since filesystem is read-only
+from storage import use_db_storage, media_url
 
-import storage
-
-UPLOAD_DIR = Path(__file__).parent / "uploads"
-if not storage.use_db_storage():
+if not use_db_storage():
+    print("WARNING: Local filesystem storage enabled (use USE_DB_STORAGE=true in .env for Vercel)")
+    UPLOAD_DIR = ROOT_DIR / "uploads"
     UPLOAD_DIR.mkdir(parents=True, exist_ok=True)
     app.mount("/uploads", StaticFiles(directory=str(UPLOAD_DIR)), name="uploads")
-
-
-@app.api_route("/uploads/{filename}", methods=["GET", "HEAD"])
-@app.api_route("/api/media/{filename}", methods=["GET", "HEAD"])
-async def serve_upload(filename: str, request: Request):
-    """Sajikan media unggahan; dukung Range agar video/audio bisa di-seek."""
-    size = await storage.upload_size(app.state.db, filename)
-    if size is None:
-        raise HTTPException(status_code=404, detail="Media tidak ditemukan")
-
-    content_type = storage._content_type(filename)
-    headers = {"Accept-Ranges": "bytes", "Cache-Control": "public, max-age=3600"}
-    range_header = request.headers.get("range", "")
-    match = re.match(r"bytes=(\d*)-(\d*)", range_header)
-
-    if match and (match.group(1) or match.group(2)):
-        start_raw, end_raw = match.group(1), match.group(2)
-        if start_raw:
-            start = int(start_raw)
-            end = int(end_raw) if end_raw else size - 1
-        else:  # sufiks: bytes=-N
-            length = int(end_raw)
-            start = max(0, size - length)
-            end = size - 1
-        end = min(end, size - 1)
-        if start > end or start >= size:
-            return Response(status_code=416, headers={**headers, "Content-Range": f"bytes */{size}"})
-        length = end - start + 1
-        stream = await storage.open_upload_range(app.state.db, filename, start, length)
-        if stream is None:
-            raise HTTPException(status_code=404, detail="Media tidak ditemukan")
-        headers.update({"Content-Range": f"bytes {start}-{end}/{size}", "Content-Length": str(length)})
-        return StreamingResponse(stream, status_code=206, media_type=content_type, headers=headers)
-
-    if request.method == "HEAD":
-        headers["Content-Length"] = str(size)
-        return Response(status_code=200, media_type=content_type, headers=headers)
-
-    stream, served_type = await storage.open_upload(app.state.db, filename)
-    if stream is None:
-        raise HTTPException(status_code=404, detail="Media tidak ditemukan")
-    content_type = served_type or content_type
-    headers["Content-Length"] = str(size)
-    return StreamingResponse(stream, media_type=content_type, headers=headers)
+else:
+    print("INFO: MongoDB GridFS storage enabled (required for Vercel deployment)")
 
 # Create a router with the /api prefix
-api_router = APIRouter(prefix="/api")
+api_router = FastAPI.routes.APIRouter(prefix="/api")
 
 
 # Define Models
 class StatusCheck(BaseModel):
     id: str = Field(default_factory=lambda: str(uuid.uuid4()))
-    client_name: str
-    timestamp: datetime = Field(default_factory=datetime.utcnow)
+    timestamp: datetime = Field(default_factory=datetime.now, freeze=True)
 
-class StatusCheckCreate(BaseModel):
-    client_name: str
+from pydantic import BaseModel, Field, FieldInfo
+from typing import Optional, List
+from datetime import datetime
+import uuid
+from typing_extensions import Annotated
 
-# Add your routes to the router instead of directly to app
-@api_router.get("/")
-async def root():
-    return {"message": "Hello World"}
 
-@api_router.post("/status", response_model=StatusCheck)
-async def create_status_check(input: StatusCheckCreate):
-    status_dict = input.dict()
-    status_obj = StatusCheck(**status_dict)
-    _ = await db.status_checks.insert_one(status_obj.dict())
-    return status_obj
+class ArticleOut(BaseModel):
+    article_id: str
+    title: str
+    slug: str
+    excerpt: Optional[str] = ""
+    body: Optional[str] = ""
+    category: Optional[str] = "Catatan"
+    image_url: Optional[str] = ""
+    intro_video: Optional[str] = ""
+    music_url: Optional[str] = ""
+    music_title: Optional[str] = ""
+    font: Optional[str] = ""
+    published: bool = True
+    created_at: Optional[datetime] = None
+    updated_at: Optional[datetime] = None
 
-@api_router.get("/status", response_model=List[StatusCheck])
-async def get_status_checks():
-    status_checks = await db.status_checks.find().to_list(1000)
-    return [StatusCheck(**status_check) for status_check in status_checks]
 
-# Include routers in api_router FIRST
-api_router.include_router(auth_router)
-api_router.include_router(ai_router)
-api_router.include_router(articles_router)
-api_router.include_router(portfolio_router)
+class ArticleCreate(BaseModel):
+    title: str
+    excerpt: Optional[str] = ""
+    body: Optional[str] = ""
+    category: Optional[str] = "Catatan"
+    image_url: Optional[str] = ""
+    intro_video: Optional[str] = ""
+    music_url: Optional[str] = ""
+    music_title: Optional[str] = ""
+    font: Optional[str] = ""
+    published: bool = True
 
-# Then include the api_router in the main app
+
+class ArticleUpdate(BaseModel):
+    title: Optional[str] = None
+    excerpt: Optional[str] = None
+    body: Optional[str] = None
+    category: Optional[str] = None
+    image_url: Optional[str] = None
+    intro_video: Optional[str] = None
+    music_url: Optional[str] = None
+    music_title: Optional[str] = None
+    font: Optional[str] = None
+    published: Optional[bool] = None
+
+
+class ContentInput(BaseModel):
+    title: str
+    category: str
+    description: Optional[str] = ""
+    body: Optional[str] = ""
+    images: list[str] = []
+    metadata: dict = {}
+    published: bool = False
+    music_url: Optional[str] = ""
+    music_title: Optional[str] = ""
+    intro_video: Optional[str] = ""
+    font: Optional[str] = ""
+
+
+class FinishUpload(BaseModel):
+    upload_id: str
+    kind: str
+    filename: str
+    content_type: Optional[str] = ""
+
+
+def make_slug(title: str) -> str:
+    """Create URL-friendly slug from title."""
+    slug = title.lower().strip()
+    slug = slug.replace(" ", "-")
+    slug = "".join(c for c in slug if c.isalnum() or c == "-")
+    return slug or str(uuid.uuid4())[:8]
+
+
+# ==============================================================================
+# Routes
+# ==============================================================================
+
+# API Router registration
 app.include_router(api_router)
-
-allowed_origins = [
-    origin.strip()
-    for origin in os.getenv("FRONTEND_ORIGINS", "http://localhost:3000").split(",")
-    if origin.strip()
-]
-
-app.add_middleware(
-    CORSMiddleware,
-    allow_credentials=True,
-    allow_origins=allowed_origins,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
-
-# Configure logging
-logging.basicConfig(
-    level=logging.INFO,
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
-)
-logger = logging.getLogger(__name__)
-
-@app.middleware("http")
-async def database_guard(request: Request, call_next):
-    if not db_ready and request.url.path.startswith("/api"):
-        return JSONResponse(
-            status_code=503,
-            content={"detail": "Database belum dikonfigurasi (MONGO_URL belum diset)"},
-        )
-    return await call_next(request)
-
-
-@app.on_event("startup")
-async def ensure_security_indexes():
-    if not db_ready:
-        logger.warning("MONGO_URL belum diset; endpoint database akan menjawab 503")
-        return
-    try:
-        await asyncio.wait_for(_create_security_indexes(), timeout=10)
-    except Exception as exc:  # never block the app when the database is unreachable
-        logger.warning("Gagal membuat index keamanan: %s", exc)
-
-
-async def _create_security_indexes():
-    await db.user_sessions.create_index("expires_at", expireAfterSeconds=0)
-    await db.auth_login_attempts.create_index("expires_at", expireAfterSeconds=0)
-
-@app.on_event("shutdown")
-async def shutdown_db_client():
-    if client is not None:
-        client.close()
-    client.close()

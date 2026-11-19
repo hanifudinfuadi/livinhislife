@@ -2,7 +2,7 @@ const STATUS_MESSAGES = {
   400: 'Berkas tidak sesuai. Pastikan berupa gambar (JPG, PNG, WEBP, atau GIF).',
   401: 'Sesi Anda sudah berakhir. Silakan masuk kembali, lalu ulangi unggahan.',
   403: 'Akses ditolak. Pastikan origin frontend (localhost:3001) terdaftar pada FRONTEND_ORIGINS di backend/.env.',
-  413: 'Ukuran gambar terlalu besar untuk diunggah.',
+  413: 'Berkas terlalu besar untuk satu permintaan. Gambar akan diunggah bertahap; coba lagi.',
   429: 'Terlalu banyak percobaan. Tunggu beberapa saat lalu coba lagi.',
   503: 'Unggahan tidak tersedia. Periksa konfigurasi backend.',
 };
@@ -29,7 +29,9 @@ export const describeUploadError = async (response, fallback = 'Gambar gagal diu
     return known || 'Sesi Anda sudah berakhir. Silakan masuk kembali.';
   }
 
-  if (detail && known && !known.includes(detail)) return `${known} (${detail})`;
+  // 413 dari Vercel berisi halaman HTML (FUNCTION_PAYLOAD_TOO_LARGE), bukan detail JSON.
+  if (response.status === 413 && !detail) return known;
+  if (detail && known && !known.includes(detail)) return `${detail} (${known})`;
   return detail || known || fallback;
 };
 

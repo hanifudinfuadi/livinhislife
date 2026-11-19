@@ -9,6 +9,7 @@ import os
 import shutil
 from pathlib import Path
 from routes.auth import get_current_user, get_db
+from routes.portfolio import MAX_IMAGE_BYTES, _looks_like_image
 from storage import media_url, save_upload
 
 router = APIRouter(prefix="/articles", tags=["articles"])
@@ -83,8 +84,17 @@ async def upload_article_image(
     if ext not in {".jpg", ".jpeg", ".png", ".webp", ".gif"}:
         ext = ".jpg"
 
+    data = await file.read()
+    if len(data) > MAX_IMAGE_BYTES:
+        raise HTTPException(
+            status_code=413,
+            detail=f"Ukuran gambar melebihi batas {MAX_IMAGE_BYTES // (1024 * 1024)} MB",
+        )
+    if not _looks_like_image(data[:12]):
+        raise HTTPException(status_code=400, detail="Berkas bukan gambar yang valid")
+
     filename = f"{uuid.uuid4().hex}{ext}"
-    await save_upload(get_db(request), filename, await file.read())
+    await save_upload(get_db(request), filename, data)
 
     return {"image_url": media_url(filename)}
 

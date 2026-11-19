@@ -1,9 +1,12 @@
 import React, { useEffect, useRef, useState } from 'react';
 import ImageCropper from './ImageCropper';
 import { describeUploadError } from './uploadError';
+import { CHUNK_SIZE, uploadImageInParts } from './chunkUpload';
 import './PortfolioManager.css';
 
 const API = process.env.REACT_APP_BACKEND_URL || (typeof window !== 'undefined' ? window.location.origin : '');
+// Halaman yang dibuka dari preview deployment tetap memakai API produksi.
+const API_BASE = API && API.includes('://') ? API : 'https://narative-storyteller.vercel.app';
 const categories = [
   { kind: 'documentation', label: 'Dokumentasi' },
   { kind: 'creative', label: 'Tulisan Kreatif' },
@@ -18,7 +21,6 @@ const FONTS = [
   { value: 'merriweather', label: 'Merriweather', family: "'Merriweather', Georgia, Times New Roman, serif" },
 ];
 
-const CHUNK_SIZE = 3 * 1024 * 1024;
 const LIMITS = {
   image: { bytes: 14 * 1024 * 1024, label: 'gambar' },
   video: { bytes: 100 * 1024 * 1024, label: 'video' },
@@ -70,12 +72,9 @@ const PortfolioManager = ({ channel }) => {
   const changeKind = (next) => { setKind(next); setForm(fresh); setEditing(null); setEditingTitle(''); reloadItems(next).catch((error) => setNotice(error.message)); };
 
   const uploadBlob = async (file) => {
-    const data = new FormData();
-    data.append('files', file);
-    const response = await fetch(`${API}/api/portfolio/upload`, { method: 'POST', body: data, credentials: 'include' });
-    if (!response.ok) throw new Error(await describeUploadError(response));
-    const uploaded = await response.json();
-    return uploaded[0]?.url || '';
+    // Dikirim bertahap: Vercel menolak body > 4.5 MB, jadi gambar dipotong per 3 MB.
+    const uploaded = await uploadImageInParts(API_BASE, file);
+    return uploaded?.url || '';
   };
 
   const uploadInParts = async (file, kind, onProgress) => {
@@ -87,11 +86,11 @@ const PortfolioManager = ({ channel }) => {
       data.append('upload_id', uploadId);
       data.append('index', String(index));
       data.append('file', chunk, `part-${index}.bin`);
-      const response = await fetch(`${API}/api/portfolio/upload-part`, { method: 'POST', body: data, credentials: 'include' });
+      const response = await fetch(`${API_BASE}/api/portfolio/upload-part`, { method: 'POST', body: data, credentials: 'include' });
       if (!response.ok) throw new Error(await describeUploadError(response));
       if (onProgress) onProgress(Math.round(((index + 1) / total) * 95));
     }
-    const response = await fetch(`${API}/api/portfolio/upload-finish`, {
+    const response = await fetch(`${API_BASE}/api/portfolio/upload-finish`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       credentials: 'include',

@@ -1,6 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import ImageCropper from './ImageCropper';
 import { describeUploadError } from './uploadError';
+import { CHUNK_SIZE, uploadImageInParts } from './chunkUpload';
 import './ArticlesManager.css';
 
 const API_URL = process.env.REACT_APP_BACKEND_URL || (typeof window !== 'undefined' ? window.location.origin : '');
@@ -12,7 +13,6 @@ const FONT_OPTIONS = [
   { value: 'plus-jakarta', label: 'Plus Jakarta Sans', hint: 'Sans modern dan bersih untuk catatan singkat.' },
   { value: 'merriweather', label: 'Merriweather', hint: 'Serif jurnalistik, tegas dan nyaman untuk cerita.' },
 ];
-const CHUNK_SIZE = 3 * 1024 * 1024;
 const LIMITS = {
   video: { bytes: 100 * 1024 * 1024, label: 'video' },
   audio: { bytes: 30 * 1024 * 1024, label: 'audio' },
@@ -48,12 +48,9 @@ const ArticlesManager = () => {
   };
 
   const uploadBlob = async (file) => {
-    const form = new FormData();
-    form.append('file', file);
-    const response = await fetch(`${API_URL}/api/articles/upload-image`, { method: 'POST', body: form, credentials: 'include' });
-    if (!response.ok) throw new Error(await describeUploadError(response, 'Gagal mengunggah gambar.'));
-    const result = await response.json();
-    return result.image_url;
+    // Bertahap: Vercel menolak body request di atas 4.5 MB.
+    const uploaded = await uploadImageInParts(API_URL, file);
+    return uploaded?.url || '';
   };
 
   const uploadInParts = async (file, kind, onProgress) => {

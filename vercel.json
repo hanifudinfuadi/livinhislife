@@ -5,7 +5,10 @@
   "outputDirectory": "frontend/build",
   "functions": {
     "api/index.py": {
-      "maxDuration": 60
+      "maxDuration": 300
+    },
+    "backend/routes/*": {
+      "maxDuration": 300
     }
   },
   "rewrites": [
@@ -18,8 +21,18 @@
       "destination": "/api/index"
     },
     {
+      "source": "/api/media/:path*",
+      "destination": "/api/index"
+    },
+    {
       "source": "/(.*)",
       "destination": "/index.html"
     }
-  ]
+  ],
+  "env": {
+    "USE_DB_STORAGE": "true",
+    "MONGO_URL": "mongodb://localhost:27017",
+    "DB_NAME": "hanif_portfolio",
+    "FRONTEND_ORIGINS": "http://localhost:3000,https://narative-storyteller.vercel.app"
+  }
 }

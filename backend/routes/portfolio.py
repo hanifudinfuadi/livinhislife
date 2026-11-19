@@ -24,6 +24,8 @@ MAX_UPLOAD_BYTES = {
     "video": MAX_VIDEO_BYTES,
     "audio": MAX_AUDIO_BYTES,
 }
+# Vercel membatasi body request 4.5 MB, jadi sebagian besar gambar datang bertahap.
+CHUNK_MAX_BYTES = 4 * 1024 * 1024
 # Peramban kadang mengirim MIME generik (octet-stream, video/quicktime, dll).
 GENERIC_MIMES = {"", "application/octet-stream", "binary/octet-stream"}
 ALLOWED_KINDS = {"documentation", "creative", "novel", "media"}
@@ -107,8 +109,10 @@ async def upload_media(
         if len(data) > MAX_IMAGE_BYTES:
             raise HTTPException(
                 status_code=413,
-                detail=f"Ukuran gambar melebihi batas {MAX_IMAGE_BYTES // (1024 * 1024)} MB",
+                detail=f"Ukuran gambar melebihi batas {MAX_IMAGE_BYTES // (1024 * 1024)} MB. Unggah bertahap lewat /portfolio/upload-part.",
             )
+        if not _looks_like_image(data[:12]):
+            raise HTTPException(status_code=400, detail="Berkas bukan gambar yang valid")
         filename = f"{uuid.uuid4().hex}{ext}"
         await save_upload(db, filename, data)
         results.append({"url": media_url(filename), "name": file.filename})
@@ -144,6 +148,16 @@ def _chunk_dir(upload_id: str) -> Path:
     return CHUNK_TMP / safe
 
 
+IMAGE_SIGNATURES = (b"\xff\xd8\xff", b"\x89PNG\r\n\x1a\n", b"GIF87a", b"GIF89a", b"BM")
+
+
+def _looks_like_image(head: bytes) -> bool:
+    head = head or b""
+    if head.startswith(IMAGE_SIGNATURES):
+        return True
+    return head[:4] == b"RIFF" and head[8:12] == b"WEBP"
+
+
 def _prune_chunks(max_age_seconds: int = 7200) -> None:
     now = time.time()
     try:
@@ -171,6 +185,8 @@ async def upload_part(
     data = await file.read()
     if not data:
         raise HTTPException(status_code=400, detail="Bagian unggahan kosong")
+    if len(data) > CHUNK_MAX_BYTES:
+        raise HTTPException(status_code=413, detail="Bagian unggahan terlalu besar")
     _prune_chunks()
     target = _chunk_dir(upload_id) / f"{index:05d}.part"
     target.parent.mkdir(parents=True, exist_ok=True)
@@ -202,6 +218,13 @@ async def upload_finish(
     parts = sorted(folder.glob("*.part")) if folder.is_dir() else []
     if not parts:
         raise HTTPException(status_code=400, detail="Sesi unggah tidak ditemukan atau kosong")
+    if kind == "image":
+        # Cek tanda tangan berkas pada potongan pertama agar bukan sekadar MIME tebakan klien.
+        with open(parts[0], "rb") as head:
+            signature = head.read(12)
+        if not _looks_like_image(signature):
+            shutil.rmtree(folder, ignore_errors=True)
+            raise HTTPException(status_code=400, detail="Berkas bukan gambar yang valid")
 
     limit = MAX_UPLOAD_BYTES[kind]
     total = sum(part.stat().st_size for part in parts)
