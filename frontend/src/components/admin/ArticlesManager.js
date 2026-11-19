@@ -4,7 +4,14 @@ import { describeUploadError } from './uploadError';
 import './ArticlesManager.css';
 
 const API_URL = process.env.REACT_APP_BACKEND_URL || (typeof window !== 'undefined' ? window.location.origin : '');
-const emptyArticle = { title: '', excerpt: '', body: '', category: 'Catatan', image_url: '', intro_video: '', music_url: '', music_title: '', published: false };
+const emptyArticle = { title: '', excerpt: '', body: '', category: 'Catatan', image_url: '', intro_video: '', music_url: '', music_title: '', font: '', published: false };
+// Same ids as the portfolio typography system so CSS classes can be shared.
+const FONT_OPTIONS = [
+  { value: '', label: 'Bawaan (Georgia)', hint: 'Tenang dan klasik, cocok untuk hampir semua tulisan.' },
+  { value: 'lora', label: 'Lora', hint: 'Serif hangat dan mudah dibaca untuk esai panjang.' },
+  { value: 'plus-jakarta', label: 'Plus Jakarta Sans', hint: 'Sans modern dan bersih untuk catatan singkat.' },
+  { value: 'merriweather', label: 'Merriweather', hint: 'Serif jurnalistik, tegas dan nyaman untuk cerita.' },
+];
 const CHUNK_SIZE = 3 * 1024 * 1024;
 const LIMITS = {
   video: { bytes: 100 * 1024 * 1024, label: 'video' },
@@ -202,7 +209,7 @@ const ArticlesManager = () => {
 
   const editArticle = (item) => {
     setEditingId(item.article_id);
-    setArticle({ title: item.title, excerpt: item.excerpt || '', body: item.body || '', category: item.category || 'Catatan', image_url: item.image_url || '', intro_video: item.intro_video || '', music_url: item.music_url || '', music_title: item.music_title || '', published: item.published });
+    setArticle({ title: item.title, excerpt: item.excerpt || '', body: item.body || '', category: item.category || 'Catatan', image_url: item.image_url || '', intro_video: item.intro_video || '', music_url: item.music_url || '', music_title: item.music_title || '', font: item.font || '', published: item.published });
     setMessage(`Sedang menyunting “${item.title}”.`);
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
@@ -235,6 +242,14 @@ const ArticlesManager = () => {
       <form className="article-editor" onSubmit={saveArticle}>
         <label>Judul<input name="title" value={article.title} onChange={setField} required /></label>
         <label>Kategori<input name="category" value={article.category} onChange={setField} /></label>
+        <label>Jenis font tulisan
+          <select name="font" value={article.font || ''} onChange={setField}>
+            {FONT_OPTIONS.map((option) => (
+              <option key={option.value} value={option.value}>{option.label}</option>
+            ))}
+          </select>
+          <span className="article-field-hint">{(FONT_OPTIONS.find((option) => option.value === (article.font || '')) || FONT_OPTIONS[0]).hint} Hanya memengaruhi tampilan tulisan di portfolio.</span>
+        </label>
         <label>Ringkasan<textarea name="excerpt" value={article.excerpt} onChange={setField} rows="2" /></label>
         <label>Isi artikel<textarea name="body" value={article.body} onChange={setField} rows="9" /></label>
 
@@ -315,7 +330,7 @@ const ArticlesManager = () => {
       <h3>Artikel tersimpan ({articles.length})</h3>
       <div className="managed-articles">
         {articles.map((item) => <article className="managed-article" key={item.article_id}>
-          <div><strong>{item.title}</strong><span>{item.published ? 'Terbit' : 'Draf'} · {item.category}</span></div>
+          <div><strong>{item.title}</strong><span>{item.published ? 'Terbit' : 'Draf'} · {item.category} · {FONT_OPTIONS.find((option) => option.value === (item.font || ''))?.label || FONT_OPTIONS[0].label}</span></div>
           <div className="managed-article-actions"><button onClick={() => editArticle(item)}>Edit</button><button onClick={() => deleteArticle(item)}>Hapus</button></div>
         </article>)}
         {!articles.length && <p>Belum ada artikel. Mulai dengan menulis dokumentasi pertama.</p>}

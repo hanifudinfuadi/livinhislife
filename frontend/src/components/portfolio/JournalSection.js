@@ -4,6 +4,13 @@ import './JournalSection.css';
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL || (typeof window !== 'undefined' ? window.location.origin : 'http://localhost:8001');
 
+const FONT_CLASSES = {
+  lora: 'article-font--lora',
+  'plus-jakarta': 'article-font--plus-jakarta',
+  merriweather: 'article-font--merriweather',
+};
+const fontClass = (article) => FONT_CLASSES[article?.font] || '';
+
 const JournalSection = () => {
   const [isVisible, setIsVisible] = useState(false);
   const [articles, setArticles] = useState([]);
@@ -59,7 +66,7 @@ const JournalSection = () => {
         <div className="articles-grid">
           {articles.map((article, index) => (
             <article
-              className="article-card"
+              className={`article-card ${fontClass(article)}`}
               key={article.article_id || index}
               style={{ animationDelay: `${0.1 * index}s` }}
             >
@@ -95,7 +102,7 @@ const JournalSection = () => {
           onClick={() => setSelectedArticle(null)}
         >
           <article
-            className="article-modal"
+            className={`article-modal ${fontClass(selectedArticle)}`}
             role="dialog"
             aria-modal="true"
             aria-labelledby="article-modal-title"

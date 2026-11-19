@@ -32,6 +32,7 @@ class ArticleOut(BaseModel):
     intro_video: Optional[str] = ""
     music_url: Optional[str] = ""
     music_title: Optional[str] = ""
+    font: Optional[str] = ""
     published: bool = True
     created_at: Optional[datetime] = None
     updated_at: Optional[datetime] = None
@@ -46,6 +47,7 @@ class ArticleCreate(BaseModel):
     intro_video: Optional[str] = ""
     music_url: Optional[str] = ""
     music_title: Optional[str] = ""
+    font: Optional[str] = ""
     published: bool = True
 
 
@@ -58,6 +60,7 @@ class ArticleUpdate(BaseModel):
     intro_video: Optional[str] = None
     music_url: Optional[str] = None
     music_title: Optional[str] = None
+    font: Optional[str] = None
     published: Optional[bool] = None
 
 
@@ -139,6 +142,7 @@ async def create_article(request: Request, data: ArticleCreate, user=Depends(get
         "intro_video": data.intro_video or "",
         "music_url": data.music_url or "",
         "music_title": data.music_title or "",
+        "font": data.font or "",
         "published": data.published,
         "created_at": now,
         "updated_at": now,
