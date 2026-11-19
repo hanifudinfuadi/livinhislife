@@ -178,7 +178,7 @@ async def update_article(request: Request, article_id: str, data: ArticleUpdate,
     if not existing:
         raise HTTPException(status_code=404, detail="Article not found")
 
-    update = {k: v for k, v in data.dict().items() if v is not None}
+    update = {k: v for k, v in data.model_dump(exclude_unset=True).items() if v is not None}
     if "title" in update:
         update["slug"] = make_slug(update["title"])
     update["updated_at"] = datetime.now(timezone.utc)

@@ -24,6 +24,8 @@ MAX_UPLOAD_BYTES = {
     "video": MAX_VIDEO_BYTES,
     "audio": MAX_AUDIO_BYTES,
 }
+# Peramban kadang mengirim MIME generik (octet-stream, video/quicktime, dll).
+GENERIC_MIMES = {"", "application/octet-stream", "binary/octet-stream", "video/quicktime", "audio/x-m4a", "audio/mp4"}
 ALLOWED_KINDS = {"documentation", "creative", "novel", "media"}
 
 
@@ -115,9 +117,11 @@ async def upload_media(
 
 ALLOWED_EXT = {
     "image": {".jpg", ".jpeg", ".png", ".webp", ".gif"},
-    "video": {".mp4", ".webm", ".ogg"},
-    "audio": {".mp3", ".ogg", ".wav", ".m4a", ".aac"},
+    "video": {".mp4", ".m4v", ".mov", ".webm", ".ogg", ".ogv"},
+    "audio": {".mp3", ".ogg", ".oga", ".wav", ".m4a", ".aac"},
 }
+# Ekstensi yang disimpan; .mov/.m4v/.ogv tetap diputar sebagai MP4/Ogg di peramban.
+STORE_EXT = {"video": {".mov": ".mp4", ".m4v": ".mp4", ".ogv": ".ogg"}, "audio": {".oga": ".ogg"}}
 
 ALLOWED_MIME = {
     "image": ("image/",),
@@ -187,8 +191,9 @@ async def upload_finish(
     if ext not in ALLOWED_EXT[kind]:
         raise HTTPException(status_code=400, detail=f"Format {kind} tidak didukung")
     mime = (payload.content_type or "").lower()
-    if mime and not any(mime.startswith(prefix) for prefix in ALLOWED_MIME[kind]):
+    if mime and mime not in GENERIC_MIMES and not any(mime.startswith(prefix) for prefix in ALLOWED_MIME[kind]):
         raise HTTPException(status_code=400, detail=f"Berkas harus berupa {kind}")
+    ext = STORE_EXT.get(kind, {}).get(ext, ext)
 
     folder = _chunk_dir(payload.upload_id)
     parts = sorted(folder.glob("*.part")) if folder.is_dir() else []
