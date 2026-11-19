@@ -185,20 +185,6 @@ const JournalSection = () => {
                 key={article.article_id || index}
                 style={{ animationDelay: `${0.1 * index}s` }}
               >
-                {article.intro_video && (
-                  <div className="article-video-wrapper">
-                    <video
-                      className="article-video"
-                      src={resolveUrl(article.intro_video)}
-                      autoPlay
-                      muted
-                      loop
-                      playsInline
-                      preload="metadata"
-                    />
-                  </div>
-                )}
-
                 <div className="article-content">
                   <span className="article-label">{article.category || 'Catatan'}</span>
                   <h3 className="article-title">{article.title}</h3>
