@@ -25,7 +25,7 @@ MAX_UPLOAD_BYTES = {
     "audio": MAX_AUDIO_BYTES,
 }
 # Peramban kadang mengirim MIME generik (octet-stream, video/quicktime, dll).
-GENERIC_MIMES = {"", "application/octet-stream", "binary/octet-stream", "video/quicktime", "audio/x-m4a", "audio/mp4"}
+GENERIC_MIMES = {"", "application/octet-stream", "binary/octet-stream"}
 ALLOWED_KINDS = {"documentation", "creative", "novel", "media"}
 
 
@@ -191,7 +191,10 @@ async def upload_finish(
     if ext not in ALLOWED_EXT[kind]:
         raise HTTPException(status_code=400, detail=f"Format {kind} tidak didukung")
     mime = (payload.content_type or "").lower()
-    if mime and mime not in GENERIC_MIMES and not any(mime.startswith(prefix) for prefix in ALLOWED_MIME[kind]):
+    # MIME alternatif yang tetap valid untuk ekstensi di atas diperlakukan sebagai generik.
+    alt_mime = {"video": {"video/quicktime", "application/mp4"}, "audio": {"audio/x-m4a", "audio/mp4", "audio/x-wav", "audio/wave", "audio/x-mpeg"}}
+    generic = mime in GENERIC_MIMES or mime in alt_mime.get(kind, set())
+    if not generic and not any(mime.startswith(prefix) for prefix in ALLOWED_MIME[kind]):
         raise HTTPException(status_code=400, detail=f"Berkas harus berupa {kind}")
     ext = STORE_EXT.get(kind, {}).get(ext, ext)
 

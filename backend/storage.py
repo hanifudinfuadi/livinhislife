@@ -65,6 +65,74 @@ async def save_upload_path(db, filename: str, path: Path) -> None:
     shutil.copyfile(path, UPLOAD_DIR / filename)
 
 
+async def upload_size(db, filename: str):
+    """Ukuran berkas yang tersimpan (dipakai untuk mendukung Range/seek pemutar media)."""
+    if use_db_storage():
+        bucket = _bucket(db)
+        try:
+            grid_out = await bucket.open_download_stream_by_name(filename)
+        except Exception:
+            grid_out = None
+        if grid_out is not None:
+            return grid_out.length
+        doc = await db.media.find_one({"filename": filename}, {"data": 0})
+        if doc and doc.get("size"):
+            return int(doc["size"])
+        return None
+    path = UPLOAD_DIR / filename
+    return path.stat().st_size if path.is_file() else None
+
+
+async def open_upload_range(db, filename: str, start: int, length: int):
+    """Kembalikan iterator async untuk potongan berkas [start, start+length)."""
+    if use_db_storage():
+        bucket = _bucket(db)
+        try:
+            grid_out = await bucket.open_download_stream_by_name(filename)
+        except Exception:
+            grid_out = None
+        if grid_out is not None:
+            await grid_out.seek(start)
+            remaining = length
+
+            async def grid_range_iter():
+                nonlocal remaining
+                while remaining > 0:
+                    chunk = await grid_out.read(min(GRIDFS_CHUNK, remaining))
+                    if not chunk:
+                        break
+                    remaining -= len(chunk)
+                    yield chunk
+
+            return grid_range_iter()
+        doc = await db.media.find_one({"filename": filename})
+        if not doc or not doc.get("data"):
+            return None
+        data = doc["data"][start:start + length]
+
+        async def legacy_range_iter():
+            yield data
+
+        return legacy_range_iter()
+
+    path = UPLOAD_DIR / filename
+    if not path.is_file():
+        return None
+
+    async def disk_range_iter():
+        with open(path, "rb") as handle:
+            handle.seek(start)
+            remaining = length
+            while remaining > 0:
+                chunk = handle.read(min(GRIDFS_CHUNK, remaining))
+                if not chunk:
+                    break
+                remaining -= len(chunk)
+                yield chunk
+
+    return disk_range_iter()
+
+
 async def open_upload(db, filename: str):
     """Kembalikan (iterator async byte, content_type) atau (None, None)."""
     if use_db_storage():

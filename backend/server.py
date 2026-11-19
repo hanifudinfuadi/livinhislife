@@ -36,8 +36,9 @@ db_ready = db is not None
 # Static file serving for uploaded assets (images).
 # On Vercel the filesystem is read-only, so uploads live in MongoDB and are
 # streamed through the /uploads and /api/media routes below.
+import re
 from fastapi.staticfiles import StaticFiles
-from fastapi.responses import JSONResponse, StreamingResponse
+from fastapi.responses import JSONResponse, Response, StreamingResponse
 
 import storage
 
@@ -47,13 +48,48 @@ if not storage.use_db_storage():
     app.mount("/uploads", StaticFiles(directory=str(UPLOAD_DIR)), name="uploads")
 
 
-@app.get("/uploads/{filename}")
-@app.get("/api/media/{filename}")
-async def serve_upload(filename: str):
-    stream, content_type = await storage.open_upload(app.state.db, filename)
+@app.api_route("/uploads/{filename}", methods=["GET", "HEAD"])
+@app.api_route("/api/media/{filename}", methods=["GET", "HEAD"])
+async def serve_upload(filename: str, request: Request):
+    """Sajikan media unggahan; dukung Range agar video/audio bisa di-seek."""
+    size = await storage.upload_size(app.state.db, filename)
+    if size is None:
+        raise HTTPException(status_code=404, detail="Media tidak ditemukan")
+
+    content_type = storage._content_type(filename)
+    headers = {"Accept-Ranges": "bytes", "Cache-Control": "public, max-age=3600"}
+    range_header = request.headers.get("range", "")
+    match = re.match(r"bytes=(\d*)-(\d*)", range_header)
+
+    if match and (match.group(1) or match.group(2)):
+        start_raw, end_raw = match.group(1), match.group(2)
+        if start_raw:
+            start = int(start_raw)
+            end = int(end_raw) if end_raw else size - 1
+        else:  # sufiks: bytes=-N
+            length = int(end_raw)
+            start = max(0, size - length)
+            end = size - 1
+        end = min(end, size - 1)
+        if start > end or start >= size:
+            return Response(status_code=416, headers={**headers, "Content-Range": f"bytes */{size}"})
+        length = end - start + 1
+        stream = await storage.open_upload_range(app.state.db, filename, start, length)
+        if stream is None:
+            raise HTTPException(status_code=404, detail="Media tidak ditemukan")
+        headers.update({"Content-Range": f"bytes {start}-{end}/{size}", "Content-Length": str(length)})
+        return StreamingResponse(stream, status_code=206, media_type=content_type, headers=headers)
+
+    if request.method == "HEAD":
+        headers["Content-Length"] = str(size)
+        return Response(status_code=200, media_type=content_type, headers=headers)
+
+    stream, served_type = await storage.open_upload(app.state.db, filename)
     if stream is None:
         raise HTTPException(status_code=404, detail="Media tidak ditemukan")
-    return StreamingResponse(stream, media_type=content_type)
+    content_type = served_type or content_type
+    headers["Content-Length"] = str(size)
+    return StreamingResponse(stream, media_type=content_type, headers=headers)
 
 # Create a router with the /api prefix
 api_router = APIRouter(prefix="/api")

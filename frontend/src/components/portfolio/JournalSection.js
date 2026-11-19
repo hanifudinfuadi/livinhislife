@@ -117,15 +117,13 @@ const JournalSection = () => {
 
 
 
-  // Cuplikan video tampil di dalam catatan yang dibuka.
+  // Cuplikan video otomatis diputar saat catatan dibuka.
   useEffect(() => {
     const video = videoRef.current;
     if (!video) return undefined;
     video.muted = videoMuted;
-    if (!videoMuted) {
-      const attempt = video.play();
-      if (attempt && typeof attempt.catch === 'function') attempt.catch(() => {});
-    }
+    const attempt = video.play();
+    if (attempt && typeof attempt.catch === 'function') attempt.catch(() => {});
     return () => {
       video.pause();
     };
@@ -187,12 +185,16 @@ const JournalSection = () => {
                 key={article.article_id || index}
                 style={{ animationDelay: `${0.1 * index}s` }}
               >
-                {article.image_url && (
-                  <div className="article-image-wrapper">
-                    <img
-                      src={resolveUrl(article.image_url)}
-                      alt={article.title}
-                      className="article-image"
+                {article.intro_video && (
+                  <div className="article-video-wrapper">
+                    <video
+                      className="article-video"
+                      src={resolveUrl(article.intro_video)}
+                      autoPlay
+                      muted
+                      loop
+                      playsInline
+                      preload="metadata"
                     />
                   </div>
                 )}
