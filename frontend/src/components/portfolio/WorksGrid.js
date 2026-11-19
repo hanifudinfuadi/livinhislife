@@ -2,6 +2,8 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import './WorksGrid.css';
 
+const BACKEND_URL = process.env.REACT_APP_BACKEND_URL || (typeof window !== 'undefined' ? window.location.origin : 'http://localhost:8001');
+
 const WorksGrid = () => {
   const navigate = useNavigate();
   const [isVisible, setIsVisible] = useState(false);
@@ -72,7 +74,7 @@ const WorksGrid = () => {
   useEffect(() => {
     let isMounted = true;
 
-    fetch(`${process.env.REACT_APP_BACKEND_URL || 'http://localhost:8001'}/api/portfolio/content?published_only=true`)
+    fetch(`${BACKEND_URL}/api/portfolio/content?published_only=true`)
       .then(response => {
         if (response.ok) return response.json();
         console.warn('API not responding, showing fallback projects');
@@ -90,12 +92,11 @@ const WorksGrid = () => {
             category: item.kind === 'documentation' || item.kind === 'media' ? 'Fotografi' : item.kind === 'novel' ? 'Novel' : item.category,
             description: item.description,
             image: item.images?.[0]
-              ? (item.images[0].startsWith('http') ? item.images[0] : `${process.env.REACT_APP_BACKEND_URL || 'http://localhost:8001'}${item.images[0]}`)
+              ? (item.images[0].startsWith('http') ? item.images[0] : `${BACKEND_URL}${item.images[0]}`)
               : null,
             images: (item.images || []).map((image) => {
               if (image.startsWith('http')) return image;
-              const base = process.env.REACT_APP_BACKEND_URL || 'http://localhost:8001';
-              return `${base}${image}`;
+              return `${BACKEND_URL}${image}`;
             }),
             body: item.body,
           })));

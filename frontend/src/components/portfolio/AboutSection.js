@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import './AboutSection.css';
 
-const API = process.env.REACT_APP_BACKEND_URL || 'http://localhost:8001';
+const API = process.env.REACT_APP_BACKEND_URL || (typeof window !== 'undefined' ? window.location.origin : 'http://localhost:8001');
 const START_YEAR = 2025;
 
 const INITIAL_STATS = [

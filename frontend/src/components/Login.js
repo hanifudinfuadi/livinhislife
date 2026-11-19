@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import './Login.css';
 
-const API_URL = process.env.REACT_APP_BACKEND_URL;
+const API_URL = process.env.REACT_APP_BACKEND_URL || (typeof window !== 'undefined' ? window.location.origin : '');
 
 const Login = () => {
   const navigate = useNavigate();
@@ -16,8 +16,16 @@ const Login = () => {
     event.preventDefault();
     setIsLoading(true);
     setError('');
+
+    const base = API_URL;
+    if (!base) {
+      setError('Konfigurasi backend tidak ditemukan. Cek variabel lingkungan REACT_APP_BACKEND_URL.');
+      setIsLoading(false);
+      return;
+    }
+
     try {
-      const response = await fetch(`${API_URL}/api/auth/login`, {
+      const response = await fetch(`${base}/api/auth/login`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
@@ -25,14 +33,22 @@ const Login = () => {
       });
       const result = await response.json().catch(() => ({}));
       if (!response.ok) {
+        const detail = result?.detail;
+        const detailText = Array.isArray(detail)
+          ? detail.map((d) => d?.msg).filter(Boolean).join('; ')
+          : detail;
         const fallback = response.status >= 500
           ? 'Server belum terhubung ke database. Coba lagi beberapa saat.'
-          : 'Tidak dapat masuk. Periksa koneksi lalu coba lagi.';
-        throw new Error(result.detail || fallback);
+          : 'Email atau kata sandi tidak valid.';
+        throw new Error(detailText || fallback);
       }
       navigate('/admin', { replace: true, state: { user: result } });
     } catch (loginError) {
-      setError(loginError.message || 'Tidak dapat masuk. Coba lagi.');
+      if (loginError instanceof TypeError) {
+        setError('Tidak dapat terhubung ke server. Periksa koneksi jaringan atau alamat backend.');
+      } else {
+        setError(loginError.message || 'Tidak dapat masuk. Coba lagi.');
+      }
     } finally {
       setIsLoading(false);
     }

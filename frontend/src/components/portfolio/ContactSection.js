@@ -1,6 +1,8 @@
 import React, { useEffect, useRef, useState } from 'react';
 import './ContactSection.css';
 
+const BACKEND_URL = process.env.REACT_APP_BACKEND_URL || (typeof window !== 'undefined' ? window.location.origin : 'http://localhost:8001');
+
 const ContactSection = () => {
   const [isVisible, setIsVisible] = useState(false);
   const [form, setForm] = useState({ name: '', email: '', message: '' });
@@ -9,7 +11,7 @@ const ContactSection = () => {
   const sectionRef = useRef(null);
 
   useEffect(() => {
-    fetch(`${process.env.REACT_APP_BACKEND_URL}/api/portfolio/settings`).then((response) => response.json()).then((settings) => setContactEmail(settings.contact_email || '')).catch(() => {});
+    fetch(`${BACKEND_URL}/api/portfolio/settings`).then((response) => response.json()).then((settings) => setContactEmail(settings.contact_email || '')).catch(() => {});
     const observer = new IntersectionObserver(
       ([entry]) => {
         if (entry.isIntersecting) setIsVisible(true);
@@ -24,7 +26,7 @@ const ContactSection = () => {
   const submitInquiry = async (event) => {
     event.preventDefault();
     try {
-      const response = await fetch(`${process.env.REACT_APP_BACKEND_URL}/api/portfolio/inquiries`, {
+      const response = await fetch(`${BACKEND_URL}/api/portfolio/inquiries`, {
         method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(form),
       });
       if (!response.ok) throw new Error();

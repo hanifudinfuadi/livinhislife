@@ -2,7 +2,7 @@ import React, { useCallback, useEffect, useRef, useState } from 'react';
 import Gallery from '../ui/gallery';
 import './DocumentationGallery.css';
 
-const API = process.env.REACT_APP_BACKEND_URL || 'http://localhost:8001';
+const API = process.env.REACT_APP_BACKEND_URL || (typeof window !== 'undefined' ? window.location.origin : 'http://localhost:8001');
 const SAMPLE_SIZE = 12;
 const ROTATE_MS = 18000;
 

@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import './AIDescriptionGenerator.css';
 
-const API_URL = process.env.REACT_APP_BACKEND_URL;
+const API_URL = process.env.REACT_APP_BACKEND_URL || (typeof window !== 'undefined' ? window.location.origin : '');
 
 const AIDescriptionGenerator = ({ onClose }) => {
   const [formData, setFormData] = useState({

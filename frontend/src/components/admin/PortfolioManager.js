@@ -3,7 +3,7 @@ import ImageCropper from './ImageCropper';
 import { describeUploadError } from './uploadError';
 import './PortfolioManager.css';
 
-const API = process.env.REACT_APP_BACKEND_URL;
+const API = process.env.REACT_APP_BACKEND_URL || (typeof window !== 'undefined' ? window.location.origin : '');
 const categories = [
   { kind: 'documentation', label: 'Dokumentasi' },
   { kind: 'creative', label: 'Tulisan Kreatif' },

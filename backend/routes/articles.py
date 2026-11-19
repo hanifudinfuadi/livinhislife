@@ -29,6 +29,9 @@ class ArticleOut(BaseModel):
     body: Optional[str] = ""
     category: Optional[str] = "Catatan"
     image_url: Optional[str] = ""
+    intro_video: Optional[str] = ""
+    music_url: Optional[str] = ""
+    music_title: Optional[str] = ""
     published: bool = True
     created_at: Optional[datetime] = None
     updated_at: Optional[datetime] = None
@@ -40,6 +43,9 @@ class ArticleCreate(BaseModel):
     body: Optional[str] = ""
     category: Optional[str] = "Catatan"
     image_url: Optional[str] = ""
+    intro_video: Optional[str] = ""
+    music_url: Optional[str] = ""
+    music_title: Optional[str] = ""
     published: bool = True
 
 
@@ -49,6 +55,9 @@ class ArticleUpdate(BaseModel):
     body: Optional[str] = None
     category: Optional[str] = None
     image_url: Optional[str] = None
+    intro_video: Optional[str] = None
+    music_url: Optional[str] = None
+    music_title: Optional[str] = None
     published: Optional[bool] = None
 
 
@@ -77,6 +86,42 @@ async def upload_article_image(
     return {"image_url": media_url(filename)}
 
 
+@router.post("/upload-video")
+async def upload_article_video(
+    request: Request, file: UploadFile = File(...), user=Depends(get_current_user)
+):
+    """Upload an article teaser video. Returns the public URL path."""
+    if not file.content_type or not file.content_type.startswith("video/"):
+        raise HTTPException(status_code=400, detail="File must be a video")
+
+    ext = Path(file.filename or "teaser.mp4").suffix.lower()
+    if ext not in {".mp4", ".webm", ".ogg"}:
+        ext = ".mp4"
+
+    filename = f"{uuid.uuid4().hex}{ext}"
+    await save_upload(get_db(request), filename, await file.read())
+
+    return {"video_url": media_url(filename)}
+
+
+@router.post("/upload-audio")
+async def upload_article_audio(
+    request: Request, file: UploadFile = File(...), user=Depends(get_current_user)
+):
+    """Upload an article background audio (MP3). Returns the public URL path."""
+    if not file.content_type or not file.content_type.startswith("audio/"):
+        raise HTTPException(status_code=400, detail="File must be an audio")
+
+    ext = Path(file.filename or "audio.mp3").suffix.lower()
+    if ext not in {".mp3", ".ogg", ".wav", ".m4a"}:
+        ext = ".mp3"
+
+    filename = f"{uuid.uuid4().hex}{ext}"
+    await save_upload(get_db(request), filename, await file.read())
+
+    return {"audio_url": media_url(filename)}
+
+
 @router.post("", response_model=ArticleOut)
 @router.post("/", response_model=ArticleOut)
 async def create_article(request: Request, data: ArticleCreate, user=Depends(get_current_user)):
@@ -91,6 +136,9 @@ async def create_article(request: Request, data: ArticleCreate, user=Depends(get
         "body": data.body or "",
         "category": data.category or "Catatan",
         "image_url": data.image_url or "",
+        "intro_video": data.intro_video or "",
+        "music_url": data.music_url or "",
+        "music_title": data.music_title or "",
         "published": data.published,
         "created_at": now,
         "updated_at": now,

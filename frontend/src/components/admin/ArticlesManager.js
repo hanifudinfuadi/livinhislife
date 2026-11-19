@@ -3,8 +3,13 @@ import ImageCropper from './ImageCropper';
 import { describeUploadError } from './uploadError';
 import './ArticlesManager.css';
 
-const API_URL = process.env.REACT_APP_BACKEND_URL;
-const emptyArticle = { title: '', excerpt: '', body: '', category: 'Catatan', image_url: '', published: false };
+const API_URL = process.env.REACT_APP_BACKEND_URL || (typeof window !== 'undefined' ? window.location.origin : '');
+const emptyArticle = { title: '', excerpt: '', body: '', category: 'Catatan', image_url: '', intro_video: '', music_url: '', music_title: '', published: false };
+const CHUNK_SIZE = 3 * 1024 * 1024;
+const LIMITS = {
+  video: { bytes: 100 * 1024 * 1024, label: 'video' },
+  audio: { bytes: 30 * 1024 * 1024, label: 'audio' },
+};
 
 const ArticlesManager = () => {
   const [articles, setArticles] = useState([]);
@@ -14,6 +19,11 @@ const ArticlesManager = () => {
   const [message, setMessage] = useState('');
   const [cropper, setCropper] = useState(null);
   const fileInput = useRef(null);
+  const audioInput = useRef(null);
+  const videoInput = useRef(null);
+  const [audioBusy, setAudioBusy] = useState(false);
+  const [videoBusy, setVideoBusy] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState(null);
 
   const resolveUrl = (url) => (!url ? '' : url.startsWith('http') ? url : `${API_URL}${url}`);
 
@@ -37,6 +47,85 @@ const ArticlesManager = () => {
     if (!response.ok) throw new Error(await describeUploadError(response, 'Gagal mengunggah gambar.'));
     const result = await response.json();
     return result.image_url;
+  };
+
+  const uploadInParts = async (file, kind, onProgress) => {
+    const uploadId = `${Date.now()}-${Math.random().toString(36).slice(2, 10)}`;
+    const total = Math.max(1, Math.ceil(file.size / CHUNK_SIZE));
+    for (let index = 0; index < total; index += 1) {
+      const chunk = file.slice(index * CHUNK_SIZE, Math.min(file.size, (index + 1) * CHUNK_SIZE));
+      const data = new FormData();
+      data.append('upload_id', uploadId);
+      data.append('index', String(index));
+      data.append('file', chunk, `part-${index}.bin`);
+      const response = await fetch(`${API_URL}/api/portfolio/upload-part`, { method: 'POST', body: data, credentials: 'include' });
+      if (!response.ok) throw new Error(await describeUploadError(response));
+      if (onProgress) onProgress(Math.round(((index + 1) / total) * 95));
+    }
+    const response = await fetch(`${API_URL}/api/portfolio/upload-finish`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
+      body: JSON.stringify({ upload_id: uploadId, kind, filename: file.name, content_type: file.type }),
+    });
+    if (!response.ok) throw new Error(await describeUploadError(response));
+    const uploaded = await response.json();
+    if (onProgress) onProgress(100);
+    return uploaded;
+  };
+
+  const uploadVideo = async (event) => {
+    const file = (event.target.files || [])[0];
+    event.target.value = '';
+    if (!file) return;
+    const limit = LIMITS.video;
+    if (file.size > limit.bytes) {
+      setMessage(`Video lebih dari ${Math.round(limit.bytes / 1048576)} MB. Gunakan URL video (YouTube/Vimeo) atau kecilkan resolusinya.`);
+      return;
+    }
+    setVideoBusy(true);
+    setUploadProgress(0);
+    setMessage('');
+    try {
+      const uploaded = await uploadInParts(file, 'video', setUploadProgress);
+      setArticle((current) => ({ ...current, intro_video: uploaded.url || '' }));
+      setMessage('Video cuplikan siap. Klik "Simpan artikel" agar tersimpan.');
+    } catch (error) { setMessage(error.message); }
+    finally { setVideoBusy(false); setUploadProgress(null); }
+  };
+
+  const uploadAudio = async (event) => {
+    const file = (event.target.files || [])[0];
+    event.target.value = '';
+    if (!file) return;
+    const limit = LIMITS.audio;
+    if (file.size > limit.bytes) {
+      setMessage(`Lagu lebih dari ${Math.round(limit.bytes / 1048576)} MB. Kecilkan bitrate MP3-nya (mis. 128 kbps).`);
+      return;
+    }
+    setAudioBusy(true);
+    setUploadProgress(0);
+    setMessage('');
+    try {
+      const uploaded = await uploadInParts(file, 'audio', setUploadProgress);
+      setArticle((current) => ({
+        ...current,
+        music_url: uploaded.url || '',
+        music_title: current.music_title || String(uploaded.name || '').replace(/\.[^.]+$/, '') || '',
+      }));
+      setMessage('Lagu pengiring siap. Klik "Simpan artikel" agar tersimpan.');
+    } catch (error) { setMessage(error.message); }
+    finally { setAudioBusy(false); setUploadProgress(null); }
+  };
+
+  const removeVideo = () => {
+    setArticle((current) => ({ ...current, intro_video: '' }));
+    setMessage('Video cuplikan dilepas.');
+  };
+
+  const removeAudio = () => {
+    setArticle((current) => ({ ...current, music_url: '', music_title: '' }));
+    setMessage('Lagu pengiring dilepas.');
   };
 
   const handleFilesChosen = (event) => {
@@ -113,7 +202,7 @@ const ArticlesManager = () => {
 
   const editArticle = (item) => {
     setEditingId(item.article_id);
-    setArticle({ title: item.title, excerpt: item.excerpt || '', body: item.body || '', category: item.category || 'Catatan', image_url: item.image_url || '', published: item.published });
+    setArticle({ title: item.title, excerpt: item.excerpt || '', body: item.body || '', category: item.category || 'Catatan', image_url: item.image_url || '', intro_video: item.intro_video || '', music_url: item.music_url || '', music_title: item.music_title || '', published: item.published });
     setMessage(`Sedang menyunting “${item.title}”.`);
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
@@ -170,6 +259,49 @@ const ArticlesManager = () => {
               alt="Pratinjau sampul"
             />
           )}
+        </div>
+
+        <div className="article-media-block">
+          <div className="article-media-row">
+            <span className="article-cover-label">Video cuplikan (opsional)</span>
+            <input ref={videoInput} type="file" accept="video/mp4,video/webm,video/ogg" onChange={uploadVideo} hidden />
+            <div className="article-media-actions">
+              <button type="button" className="admin-card-btn" disabled={videoBusy} onClick={() => videoInput.current?.click()}>
+                {videoBusy ? `Mengunggah… ${uploadProgress ?? 0}%` : article.intro_video ? 'Ganti video' : 'Unggah video'}
+              </button>
+              {article.intro_video && <button type="button" className="article-cancel-btn" onClick={removeVideo}>Hapus video</button>}
+            </div>
+          </div>
+          {article.intro_video && (
+            <video
+              className="article-editor-preview video"
+              src={resolveUrl(article.intro_video)}
+              muted
+              playsInline
+              controls
+            />
+          )}
+          <span className="article-upload-note">MP4/WebM, maksimal 100 MB — diunggah bertahap agar lolos batas server.</span>
+        </div>
+
+        <div className="article-media-block">
+          <div className="article-media-row">
+            <span className="article-cover-label">Lagu pengiring (opsional)</span>
+            <input ref={audioInput} type="file" accept="audio/mpeg,audio/mp3,audio/ogg,audio/wav,audio/mp4" onChange={uploadAudio} hidden />
+            <div className="article-media-actions">
+              <button type="button" className="admin-card-btn" disabled={audioBusy} onClick={() => audioInput.current?.click()}>
+                {audioBusy ? `Mengunggah… ${uploadProgress ?? 0}%` : article.music_url ? 'Ganti lagu' : 'Unggah lagu'}
+              </button>
+              {article.music_url && <button type="button" className="article-cancel-btn" onClick={removeAudio}>Hapus lagu</button>}
+            </div>
+          </div>
+          {article.music_url && (
+            <div className="article-music-preview">
+              <span>🎵 {article.music_title || 'Lagu pengiring'}</span>
+              <audio src={resolveUrl(article.music_url)} controls preload="none" />
+            </div>
+          )}
+          <span className="article-upload-note">MP3/OGG/WAV, maksimal 30 MB — diunggah bertahap agar lolos batas server.</span>
         </div>
 
         <label className="article-publish-toggle"><input type="checkbox" name="published" checked={article.published} onChange={setField} /> Terbitkan di portfolio</label>

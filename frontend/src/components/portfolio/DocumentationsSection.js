@@ -1,6 +1,8 @@
 import React, { useState, useEffect, useRef } from 'react';
 import './DocumentationsSection.css';
 
+const BACKEND_URL = process.env.REACT_APP_BACKEND_URL || (typeof window !== 'undefined' ? window.location.origin : 'http://localhost:8001');
+
 const DocumentationsSection = () => {
   const [selectedDocumentation, setSelectedDocumentation] = useState(null);
   const [isVisible, setIsVisible] = useState(false);
@@ -21,7 +23,7 @@ const DocumentationsSection = () => {
 
   // Load data from backend (same pattern as WorksGrid)
   useEffect(() => {
-    fetch(`${process.env.REACT_APP_BACKEND_URL}/api/portfolio/content?kind=documentation&published_only=true`)
+    fetch(`${BACKEND_URL}/api/portfolio/content?kind=documentation&published_only=true`)
       .then(response => response.ok ? response.json() : [])
       .then(items => {
         if (!Array.isArray(items)) return;
@@ -30,7 +32,7 @@ const DocumentationsSection = () => {
           category: 'Dokumentasi Fotografi',
           description: item.description || '',
           body: item.body || '',
-          images: item.images?.map(img => (img.startsWith('http') ? img : `${process.env.REACT_APP_BACKEND_URL}${img}`)) || [],
+          images: item.images?.map(img => (img.startsWith('http') ? img : `${BACKEND_URL}${img}`)) || [],
           date: new Date(item.updated_at).toLocaleDateString('id-ID', { year: 'numeric', month: 'short', day: 'numeric' })
         })));
       })

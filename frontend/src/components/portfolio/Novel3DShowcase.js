@@ -5,7 +5,7 @@ import { motion } from 'framer-motion';
 import './Novel3DShowcase.css';
 import AboutNovelModal from './AboutNovelModal';
 
-const BACKEND_URL = process.env.REACT_APP_BACKEND_URL || 'http://localhost:8001';
+const BACKEND_URL = process.env.REACT_APP_BACKEND_URL || (typeof window !== 'undefined' ? window.location.origin : 'http://localhost:8001');
 const asset = (file) => `${process.env.PUBLIC_URL}/images/novel/${file}`;
 
 function Book() {

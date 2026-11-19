@@ -5,7 +5,7 @@ import ArticlesManager from './admin/ArticlesManager';
 import PortfolioManager from './admin/PortfolioManager';
 import './AdminDashboard.css';
 
-const API_URL = process.env.REACT_APP_BACKEND_URL;
+const API_URL = process.env.REACT_APP_BACKEND_URL || (typeof window !== 'undefined' ? window.location.origin : '');
 
 const AdminDashboard = ({ user }) => {
   const navigate = useNavigate();
