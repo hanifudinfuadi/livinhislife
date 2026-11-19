@@ -347,6 +347,7 @@ const WorkDetail = () => {
                 ref={videoRef}
                 className="wd-intro-video"
                 src={videoUrl}
+                autoPlay
                 controls
                 playsInline
                 loop
