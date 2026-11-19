@@ -92,7 +92,7 @@ async def open_upload_range(db, filename: str, start: int, length: int):
         except Exception:
             grid_out = None
         if grid_out is not None:
-            await grid_out.seek(start)
+            grid_out.seek(start)
             remaining = length
 
             async def grid_range_iter():
