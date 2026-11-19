@@ -230,10 +230,6 @@ const JournalSection = () => {
             </button>
             <span className="article-label">{selectedArticle.category || 'Catatan'}</span>
             <h2 id="article-modal-title">{selectedArticle.title}</h2>
-            {selectedArticle.image_url && (
-              <img className="article-modal-cover" src={resolveUrl(selectedArticle.image_url)} alt="" />
-            )}
-
             {musicTrack && (
               <div className="article-modal-music">
                 <button
