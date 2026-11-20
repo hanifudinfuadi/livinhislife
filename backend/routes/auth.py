@@ -36,7 +36,7 @@ class AdminLogin(BaseModel):
 
 
 def get_db(request: Request) -> AsyncIOMotorDatabase:
-    return request.app.state.db
+    return request.app.state.get_db()
 
 
 def _admin_email() -> str:

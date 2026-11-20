@@ -19,7 +19,7 @@ BASE_DIR = Path(__file__).parent.parent
 
 
 def get_db(request: Request) -> AsyncIOMotorDatabase:
-    return request.app.state.db
+    return request.app.state.get_db()
 
 
 class ArticleOut(BaseModel):

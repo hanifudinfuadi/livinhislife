@@ -8,7 +8,7 @@ router = APIRouter(prefix="/media", tags=["media"])
 
 
 def get_db(request: Request) -> AsyncIOMotorDatabase:
-    return request.app.state.db
+    return request.app.state.get_db()
 
 
 @router.get("/{filename:path}")

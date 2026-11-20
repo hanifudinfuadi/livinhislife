@@ -12,12 +12,24 @@ from starlette.middleware.cors import CORSMiddleware
 ROOT_DIR = Path(__file__).parent
 load_dotenv(ROOT_DIR / '.env')
 
-# MongoDB connection setup
+# MongoDB connection setup (lazy - connect on first request)
 mongo_url = os.environ.get('MONGO_URL', 'mongodb://localhost:27017').strip()
 db_name = os.environ.get('DB_NAME', 'hanif_portfolio').strip()
 
-client = AsyncIOMotorClient(mongo_url, serverSelectionTimeoutMS=8000)
-db = client[db_name]
+_client = None
+_db = None
+
+def get_mongo_client():
+    global _client
+    if _client is None:
+        _client = AsyncIOMotorClient(mongo_url, serverSelectionTimeoutMS=8000)
+    return _client
+
+def get_db():
+    global _db
+    if _db is None:
+        _db = get_mongo_client()[db_name]
+    return _db
 
 # Create the main app
 app = FastAPI(title="Portfolio Backend")
@@ -34,8 +46,8 @@ app.add_middleware(
     allow_credentials=True,
 )
 
-# Store db in app state for route access
-app.state.db = db
+# Store db getter in app state for route access
+app.state.get_db = get_db
 
 # Storage configuration - CRITICAL for Vercel: use DB storage since filesystem is read-only
 from storage import use_db_storage, media_url
