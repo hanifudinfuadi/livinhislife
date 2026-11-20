@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import './Login.css';
 
@@ -11,6 +11,19 @@ const Login = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
+  const [capsLockOn, setCapsLockOn] = useState(false);
+
+  useEffect(() => {
+    const handleKeyDown = (event) => {
+      setCapsLockOn(event.getModifierState('CapsLock'));
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    window.addEventListener('keyup', handleKeyDown);
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
+      window.removeEventListener('keyup', handleKeyDown);
+    };
+  }, []);
 
   const handleSubmit = async (event) => {
     event.preventDefault();
@@ -72,6 +85,7 @@ const Login = () => {
             value={email}
             onChange={(event) => setEmail(event.target.value)}
             required
+            spellCheck={false}
           />
         </label>
         <label className="login-field">
@@ -100,6 +114,7 @@ const Login = () => {
               {showPassword ? '🙈' : '👁'}
             </button>
           </span>
+          {capsLockOn && <span className="login-caps-warning" role="status">⚠ Caps Lock aktif</span>}
         </label>
         <button type="submit" disabled={isLoading} className="login-submit-btn">
           {isLoading ? 'Memeriksa…' : 'Masuk ke admin'}

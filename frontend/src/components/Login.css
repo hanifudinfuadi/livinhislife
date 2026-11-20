@@ -12,3 +12,4 @@
 .login-password-wrap input{padding-right:46px;width:100%}
 .login-password-toggle{background:none;border:none;cursor:pointer;font-size:16px;line-height:1;padding:6px;position:absolute;right:8px;top:50%;transform:translateY(-50%)}
 .login-password-toggle:focus-visible{outline:2px solid #667eea;outline-offset:2px;border-radius:6px}
+.login-caps-warning{color:#dd6b20;display:block;font-size:11px;margin-top:6px}
