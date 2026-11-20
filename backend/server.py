@@ -51,6 +51,17 @@ else:
 # Create a router with the /api prefix
 api_router = FastAPI.routes.APIRouter(prefix="/api")
 
+# Include route modules
+from routes.articles import router as articles_router
+from routes.portfolio import router as portfolio_router
+from routes.auth import router as auth_router
+from routes.ai import router as ai_router
+
+api_router.include_router(articles_router)
+api_router.include_router(portfolio_router)
+api_router.include_router(auth_router)
+api_router.include_router(ai_router)
+
 
 # Define Models
 class StatusCheck(BaseModel):
