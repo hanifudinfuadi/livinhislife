@@ -56,11 +56,13 @@ from routes.articles import router as articles_router
 from routes.portfolio import router as portfolio_router
 from routes.auth import router as auth_router
 from routes.ai import router as ai_router
+from routes.media import router as media_router
 
 api_router.include_router(articles_router)
 api_router.include_router(portfolio_router)
 api_router.include_router(auth_router)
 api_router.include_router(ai_router)
+api_router.include_router(media_router)
 
 
 # Define Models

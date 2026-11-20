@@ -4,12 +4,34 @@ import os
 import shutil
 from datetime import datetime, timezone
 from pathlib import Path
+from typing import Optional, AsyncIterator
+from urllib.parse import urlparse
 
 from motor.motor_asyncio import AsyncIOMotorGridFSBucket
+
+# Cloudinary support (optional)
+try:
+    import cloudinary
+    import cloudinary.uploader
+    import cloudinary.api
+    CLOUDINARY_AVAILABLE = True
+except ImportError:
+    CLOUDINARY_AVAILABLE = False
 
 UPLOAD_DIR = Path(__file__).parent / "uploads"
 BUCKET_NAME = "media"
 GRIDFS_CHUNK = 256 * 1024
+
+
+def _cloudinary_configured() -> bool:
+    """Check if Cloudinary is configured via CLOUDINARY_URL env var."""
+    return CLOUDINARY_AVAILABLE and bool(os.getenv("CLOUDINARY_URL"))
+
+
+def _init_cloudinary() -> None:
+    """Initialize Cloudinary from CLOUDINARY_URL."""
+    if _cloudinary_configured():
+        cloudinary.config(cloudinary_url=os.getenv("CLOUDINARY_URL"))
 
 
 def use_db_storage() -> bool:
@@ -23,9 +45,25 @@ def use_db_storage() -> bool:
     if flag in {"1", "true", "yes"}:
         return True
     return False
+
+
+def _storage_backend() -> str:
+    """Return the active storage backend: 'cloudinary', 'gridfs', or 'local'."""
+    if _cloudinary_configured():
+        return "cloudinary"
+    if use_db_storage():
+        return "gridfs"
+    return "local"
+
+
 def media_url(filename: str) -> str:
     """Public URL for a stored upload."""
-    if use_db_storage():
+    backend = _storage_backend()
+    if backend == "cloudinary":
+        # Cloudinary URLs are handled by the frontend directly
+        # Return a special prefix that frontend can recognize
+        return f"/api/media/cloudinary/{filename}"
+    if backend == "gridfs":
         return f"/api/media/{filename}"
     return f"/uploads/{filename}"
 
@@ -45,10 +83,48 @@ def _content_type(filename: str) -> str:
     return mimetypes.guess_type(filename)[0] or "application/octet-stream"
 
 
-# Add debug prints to help diagnose deployment issues
+async def _delete_cloudinary(filename: str) -> None:
+    """Delete file from Cloudinary by public_id (filename without extension)."""
+    if not _cloudinary_configured():
+        return
+    _init_cloudinary()
+    public_id = Path(filename).stem
+    try:
+        cloudinary.uploader.destroy(public_id, resource_type="auto")
+    except Exception:
+        pass  # Ignore delete errors
+
+
 async def save_upload(db, filename: str, data: bytes) -> None:
-    print("[UPLOAD DEBUG] use_db_storage=", use_db_storage(), "MONGO_URL=", os.getenv("MONGO_URL"))
-    if use_db_storage():
+    print(f"[UPLOAD DEBUG] backend={_storage_backend()}, MONGO_URL={os.getenv('MONGO_URL')[:30] if os.getenv('MONGO_URL') else 'not set'}...")
+    
+    backend = _storage_backend()
+    if backend == "cloudinary":
+        _init_cloudinary()
+        public_id = Path(filename).stem
+        result = cloudinary.uploader.upload(
+            data,
+            public_id=public_id,
+            resource_type="auto",
+            overwrite=True,
+        )
+        # Store metadata in MongoDB for reference
+        await db.media_metadata.update_one(
+            {"filename": filename},
+            {"$set": {
+                "filename": filename,
+                "cloudinary_public_id": public_id,
+                "cloudinary_url": result.get("secure_url"),
+                "cloudinary_format": result.get("format"),
+                "bytes": len(data),
+                "content_type": _content_type(filename),
+                "updated_at": datetime.now(timezone.utc),
+            }},
+            upsert=True,
+        )
+        return
+
+    if backend == "gridfs":
         await _delete_gridfs(db, filename)
         await _bucket(db).upload_from_stream(
             filename, data, metadata={"content_type": _content_type(filename)}
@@ -60,8 +136,34 @@ async def save_upload(db, filename: str, data: bytes) -> None:
 
 
 async def save_upload_path(db, filename: str, path: Path) -> None:
-    print("[UPLOAD DEBUG] use_db_storage=", use_db_storage(), "MONGO_URL=", os.getenv("MONGO_URL"))
-    if use_db_storage():
+    print(f"[UPLOAD DEBUG] backend={_storage_backend()}, MONGO_URL={os.getenv('MONGO_URL')[:30] if os.getenv('MONGO_URL') else 'not set'}...")
+    
+    backend = _storage_backend()
+    if backend == "cloudinary":
+        _init_cloudinary()
+        public_id = Path(filename).stem
+        result = cloudinary.uploader.upload(
+            str(path),
+            public_id=public_id,
+            resource_type="auto",
+            overwrite=True,
+        )
+        await db.media_metadata.update_one(
+            {"filename": filename},
+            {"$set": {
+                "filename": filename,
+                "cloudinary_public_id": public_id,
+                "cloudinary_url": result.get("secure_url"),
+                "cloudinary_format": result.get("format"),
+                "bytes": path.stat().st_size,
+                "content_type": _content_type(filename),
+                "updated_at": datetime.now(timezone.utc),
+            }},
+            upsert=True,
+        )
+        return
+
+    if backend == "gridfs":
         await _delete_gridfs(db, filename)
         with open(path, "rb") as handle:
             await _bucket(db).upload_from_stream(
@@ -73,9 +175,13 @@ async def save_upload_path(db, filename: str, path: Path) -> None:
     shutil.copyfile(path, UPLOAD_DIR / filename)
 
 
-async def upload_size(db, filename: str):
+async def upload_size(db, filename: str) -> Optional[int]:
     """Ukuran berkas yang tersimpan (dipakai untuk mendukung Range/seek pemutar media)."""
-    if use_db_storage():
+    backend = _storage_backend()
+    if backend == "cloudinary":
+        doc = await db.media_metadata.find_one({"filename": filename}, {"_id": 0})
+        return doc.get("bytes") if doc else None
+    if backend == "gridfs":
         bucket = _bucket(db)
         try:
             grid_out = await bucket.open_download_stream_by_name(filename)
@@ -91,9 +197,26 @@ async def upload_size(db, filename: str):
     return path.stat().st_size if path.is_file() else None
 
 
-async def open_upload_range(db, filename: str, start: int, length: int):
+async def _cloudinary_range_iter(url: str, start: int, length: int) -> AsyncIterator[bytes]:
+    """Fetch a byte range from Cloudinary URL."""
+    import aiohttp
+    headers = {"Range": f"bytes={start}-{start + length - 1}"}
+    async with aiohttp.ClientSession() as session:
+        async with session.get(url, headers=headers) as resp:
+            async for chunk in resp.content.iter_chunked(GRIDFS_CHUNK):
+                yield chunk
+
+
+async def open_upload_range(db, filename: str, start: int, length: int) -> Optional[AsyncIterator[bytes]]:
     """Kembalikan iterator async untuk potongan berkas [start, start+length)."""
-    if use_db_storage():
+    backend = _storage_backend()
+    if backend == "cloudinary":
+        doc = await db.media_metadata.find_one({"filename": filename}, {"_id": 0})
+        if not doc or not doc.get("cloudinary_url"):
+            return None
+        return _cloudinary_range_iter(doc["cloudinary_url"], start, length)
+
+    if backend == "gridfs":
         bucket = _bucket(db)
         try:
             grid_out = await bucket.open_download_stream_by_name(filename)
@@ -143,7 +266,23 @@ async def open_upload_range(db, filename: str, start: int, length: int):
 
 async def open_upload(db, filename: str):
     """Kembalikan (iterator async byte, content_type) atau (None, None)."""
-    if use_db_storage():
+    backend = _storage_backend()
+    if backend == "cloudinary":
+        doc = await db.media_metadata.find_one({"filename": filename}, {"_id": 0})
+        if not doc or not doc.get("cloudinary_url"):
+            return None, None
+        content_type = doc.get("content_type") or _content_type(filename)
+
+        async def cloudinary_iter():
+            import aiohttp
+            async with aiohttp.ClientSession() as session:
+                async with session.get(doc["cloudinary_url"]) as resp:
+                    async for chunk in resp.content.iter_chunked(GRIDFS_CHUNK):
+                        yield chunk
+
+        return cloudinary_iter(), content_type
+
+    if backend == "gridfs":
         bucket = _bucket(db)
         grid_out = None
         try:
