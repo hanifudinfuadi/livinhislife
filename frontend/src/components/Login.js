@@ -70,7 +70,7 @@ const Login = () => {
   return (
     <main className="login-container">
       <form className="login-card" onSubmit={handleSubmit}>
-        <span className="login-eyebrow">RUANG KERJA PRIBADI</span>
+        <span className="login-eyebrow">Ruang kerja pribadi</span>
         <h1 className="login-title">Selamat datang kembali.</h1>
         <p className="login-subtitle">Masuk untuk mengelola portfolio dan tulisan Anda.</p>
 
