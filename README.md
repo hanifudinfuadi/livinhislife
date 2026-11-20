@@ -133,3 +133,4 @@ This creates a responsive scale that adapts to both viewport width and height.
 - **Responsive Design**: The responsive unit `--r` enables consistent sizing across all breakpoints
 - **GSAP Integration**: Scroll-driven animations work on desktop (deck mode) and mobile (stacked mode)
 - **Dark Mode Support**: Full dark mode theming based on CSS custom properties
+# livinhislife
