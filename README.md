@@ -134,3 +134,4 @@ This creates a responsive scale that adapts to both viewport width and height.
 - **GSAP Integration**: Scroll-driven animations work on desktop (deck mode) and mobile (stacked mode)
 - **Dark Mode Support**: Full dark mode theming based on CSS custom properties
 # livinhislife
+# livinhislife
