@@ -81,12 +81,12 @@ const JournalSection = () => {
     return () => observer.disconnect();
   }, []);
 
-  // Lagu pengantar untuk catatan yang sedang dibuka (diunggah lewat menu admin).
+  // Lagu pengantar untuk journal yang sedang dibuka (diunggah lewat menu admin).
   const musicTrack = mediaUrl(selectedArticle?.music_url);
   const musicTitle = selectedArticle?.music_title || 'Lagu pengantar';
   const videoTrack = mediaUrl(selectedArticle?.intro_video);
 
-  // Coba bunyikan lagu (bersuara) saat catatan dibuka. Jika peramban menahan autoplay,
+  // Coba bunyikan lagu (bersuara) saat journal dibuka. Jika peramban menahan autoplay,
   // coba lagi pada gesture pertama pengunjung: klik, sentuh, gulir, atau ketuk tombol.
   useEffect(() => {
     const audio = audioRef.current;
@@ -116,7 +116,7 @@ const JournalSection = () => {
   }, [musicTrack, musicMuted]);
 
 
-  // Cuplikan video otomatis diputar saat catatan dibuka.
+  // Cuplikan video otomatis diputar saat journal dibuka.
   useEffect(() => {
     const video = videoRef.current;
     if (!video) return undefined;
@@ -162,7 +162,7 @@ const JournalSection = () => {
     >
       <div className="journal-container">
         <div className="journal-header">
-          <span className="section-badge">Catatan desain</span>
+          <span className="section-badge">Journal desain</span>
           <h2 className="journal-title">Ide &amp; perspektif</h2>
           <p className="journal-description">
             Hal-hal yang membentuk cara saya melihat dan merancang.
@@ -194,7 +194,7 @@ const JournalSection = () => {
                   </div>
                 )}
                 <div className="article-content">
-                  <span className="article-label">{article.category || 'Catatan'}</span>
+                  <span className="article-label">{article.category || 'Journal'}</span>
                   <h3 className="article-title">{article.title}</h3>
                   {article.excerpt && <p className="article-description">{article.excerpt}</p>}
                   {active && (
@@ -202,7 +202,7 @@ const JournalSection = () => {
                       className="article-link"
                       onClick={() => setSelectedArticle(article)}
                     >
-                      {hasBody ? 'Baca selengkapnya →' : 'Buka catatan →'}
+                      {hasBody ? 'Baca selengkapnya →' : 'Buka journal →'}
                     </button>
                   )}
                 </div>
@@ -232,7 +232,7 @@ const JournalSection = () => {
             >
               ×
             </button>
-            <span className="article-label">{selectedArticle.category || 'Catatan'}</span>
+            <span className="article-label">{selectedArticle.category || 'Journal'}</span>
             <h2 id="article-modal-title">{selectedArticle.title}</h2>
             {selectedArticle.excerpt && (
               <p className="article-modal-excerpt">{selectedArticle.excerpt}</p>

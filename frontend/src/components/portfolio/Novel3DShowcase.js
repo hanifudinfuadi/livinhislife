@@ -92,7 +92,7 @@ const Novel3DShowcase = () => {
     description:
       novel?.description ||
       novel?.body ||
-      'Sebuah novel yang mengisahkan perjalanan spiritual seorang anak dalam memahami makna pengorbanan, kasih sayang, dan doa seorang ibu. Narasi yang menyentuh hati dengan prosa yang dalam, mengajak pembaca merenung tentang ikatan batin antara ibu dan anak.',
+      'Sebuah novel yang mengisahkan perjalanan spiritual seorang anak dalam memahami makna pengorbanan, kasih sayang, dan doa seorang ibu. Narasi yang menyentuh hati dengan prosa yang dalam, mengajak pembaca merenung in perspective ikatan batin antara ibu dan anak.',
     specs: [
       { label: 'Halaman', value: novel?.metadata?.pages || '150+' },
       { label: 'Tahun', value: '2026' },
@@ -147,7 +147,7 @@ const Novel3DShowcase = () => {
 
             <div className="info-actions">
               <button className="btn-primary-3d" onClick={() => setAboutOpen(true)}>
-                <span>Tentang Novel</span>
+                <span>In Perspective Novel</span>
               </button>
               <a className="btn-secondary-3d" href={data.orderUrl}>
                 <span>Pre-Order</span>

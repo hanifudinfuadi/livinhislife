@@ -7,8 +7,8 @@ const START_YEAR = 2025;
 const INITIAL_STATS = [
   { value: '0', label: 'Foto terpublikasi' },
   { value: '1', label: 'Tahun berkarya' },
-  { value: '0', label: 'Karya tulis' },
-  { value: '0', label: 'Jumlah karya' }
+  { value: '0', label: 'Fragments tulis' },
+  { value: '0', label: 'Jumlah fragments' }
 ];
 
 const AboutSection = () => {
@@ -62,8 +62,8 @@ const AboutSection = () => {
         setStats([
           { value: String(photoCount), label: 'Foto terpublikasi' },
           { value: String(yearCount), label: 'Tahun berkarya' },
-          { value: String(novelCount + essayCount), label: 'Karya tulis' },
-          { value: String(content.length + (Array.isArray(articles) ? articles.length : 0)), label: 'Jumlah karya' }
+          { value: String(novelCount + essayCount), label: 'Fragments tulis' },
+          { value: String(content.length + (Array.isArray(articles) ? articles.length : 0)), label: 'Jumlah fragments' }
         ]);
       } catch (error) {
         // biarkan angka awal bila API tidak terjangkau
@@ -84,7 +84,7 @@ const AboutSection = () => {
     >
       <div className="about-container">
         <div className="about-header">
-          <span className="section-badge">Tentang saya</span>
+          <span className="section-badge">In Perspective saya</span>
           <h2 className="about-title">
             Kisah dalam setiap frame.
             <br />

@@ -9,14 +9,14 @@ This document provides comprehensive UI/UX improvements and new feature implemen
 ## ✨ Key Improvements Implemented
 
 ### 1. **New Documentations Section** (Layer baru)
-- **Purpose**: Memisahkan karya dokumentasi fotografi dari kategori lainnya
+- **Purpose**: Memisahkan fragments dokumentasi fotografi dari kategori lainnya
 - **Layout Style**: Editorial-inspired dengan grid sistem yang elegan
 - **Inspiration**: httpster.net/foam-talent dengan field notes style
 - **Status**: ✅ Implemented
 
-### 2. **Enhanced Journal Section** (Catatan & Tulisan)
+### 2. **Enhanced Journal Section** (Journal & Tulisan)
 - **Kategori Penulisan**:
-  - Catatan Harian (Daily Notes)
+  - Journal Harian (Daily Notes)
   - Sajak & Poem (Poetry)
   - Motivational Quotes
   - Filsafat (Philosophical Essays)

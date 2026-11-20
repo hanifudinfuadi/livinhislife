@@ -8,10 +8,10 @@ const PortfolioNav = () => {
 
   // Define navigation links explicitly
   const navLinks = [
-    { text: 'Karya', href: '#works' },
-    { text: 'Catatan', href: '#journal' },
-    { text: 'Tentang', href: '#about' },
-    { text: 'Kontak', href: '#contact' }
+    { text: 'Fragments', href: '#works' },
+    { text: 'Journal', href: '#journal' },
+    { text: 'In Perspective', href: '#about' },
+    { text: 'Connect', href: '#contact' }
   ];
 
   // Scroll tracking effect

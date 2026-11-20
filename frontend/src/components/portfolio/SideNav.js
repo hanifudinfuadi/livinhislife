@@ -3,10 +3,10 @@ import './SideNav.css';
 
 const sectionOrder = ['about', 'works', 'journal', 'contact'];
 const navItems = [
-  { id: 'works', label: 'Karya' },
-  { id: 'journal', label: 'Catatan' },
-  { id: 'about', label: 'Tentang' },
-  { id: 'contact', label: 'Kontak' }
+  { id: 'works', label: 'Fragments' },
+  { id: 'journal', label: 'Journal' },
+  { id: 'about', label: 'In Perspective' },
+  { id: 'contact', label: 'Connect' }
 ];
 
 const SideNav = () => {

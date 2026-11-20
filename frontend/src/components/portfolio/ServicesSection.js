@@ -8,7 +8,7 @@ const ServicesSection = () => {
   const services = [
     {
       title: 'Fotografi',
-      description: 'Penceritaan visual melalui fotografi dokumentasi, potret, acara, editorial, dan produk — menangkap momen, karakter, serta sudut pandang dalam setiap karya.',
+      description: 'Penceritaan visual melalui fotografi dokumentasi, potret, acara, editorial, dan produk — menangkap momen, karakter, serta sudut pandang dalam setiap fragments.',
       tags: ['Dokumentasi', 'Potret', 'Acara', 'Editorial', 'Produk']
     },
     {
@@ -17,8 +17,8 @@ const ServicesSection = () => {
       tags: ['Copywriting', 'Artikel', 'Cerita Brand', 'Konten Kreatif']
     },
     {
-      title: 'Karya Tulis',
-      description: 'Karya literasi personal yang mengeksplorasi cerita, emosi, dan perspektif melalui novel, cerita pendek, esai, fiksi, serta tulisan reflektif.',
+      title: 'Fragments Tulis',
+      description: 'Fragments literasi personal yang mengeksplorasi cerita, emosi, dan perspektif melalui novel, cerita pendek, esai, fiksi, serta tulisan reflektif.',
       tags: ['Novel', 'Cerita Pendek', 'Esai', 'Fiksi']
     }
   ];

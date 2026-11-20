@@ -1,4 +1,5 @@
 import React from "react";
+import { motion } from "framer-motion";
 import "./App.css";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import PreLanding from "./components/PreLanding";
@@ -19,23 +20,39 @@ import Login from "./components/Login";
 import AdminDashboard from "./components/AdminDashboard";
 import ProtectedRoute from "./components/ProtectedRoute";
 
+const sectionVariants = {
+  hidden: { opacity: 0, y: 30 },
+  visible: { opacity: 1, y: 0, transition: { type: "spring", stiffness: 120, damping: 18 } },
+};
+
+const ScrollSection = ({ children }) => (
+  <motion.div
+    variants={sectionVariants}
+    initial="hidden"
+    whileInView="visible"
+    viewport={{ once: true, amount: 0.18 }}
+  >
+    {children}
+  </motion.div>
+);
+
 /* Defined at module scope so the component identity (and therefore the
    whole page subtree) is not re-created on every App render. */
 function PortfolioHome() {
   return (
     <>
-      <PortfolioNav />
-      <SideNav />
-      <PortfolioHero />
-      <AboutSection />
-      <WorksGrid />
-      <Novel3DShowcase />
-      <ServicesSection />
-      <DocumentationGallery />
-      <FAQSection />
-      <JournalSection />
-      <ContactSection />
-      <PortfolioFooter />
+      <ScrollSection><PortfolioNav /></ScrollSection>
+      <ScrollSection><SideNav /></ScrollSection>
+      <ScrollSection><PortfolioHero /></ScrollSection>
+      <ScrollSection><AboutSection /></ScrollSection>
+      <ScrollSection><WorksGrid /></ScrollSection>
+      <ScrollSection><Novel3DShowcase /></ScrollSection>
+      <ScrollSection><ServicesSection /></ScrollSection>
+      <ScrollSection><DocumentationGallery /></ScrollSection>
+      <ScrollSection><FAQSection /></ScrollSection>
+      <ScrollSection><JournalSection /></ScrollSection>
+      <ScrollSection><ContactSection /></ScrollSection>
+      <ScrollSection><PortfolioFooter /></ScrollSection>
     </>
   );
 }
@@ -45,7 +62,7 @@ function AppRouter() {
     <Routes>
       <Route path="/" element={<PreLanding />} />
       <Route path="/portfolio" element={<PortfolioHome />} />
-      <Route path="/karya/:contentId" element={<WorkDetail />} />
+      <Route path="/fragments/:contentId" element={<WorkDetail />} />
       <Route path="/login" element={<Login />} />
       <Route
         path="/admin"

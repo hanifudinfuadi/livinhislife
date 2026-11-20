@@ -5,12 +5,12 @@ import { CHUNK_SIZE, uploadImageInParts } from './chunkUpload';
 import './ArticlesManager.css';
 
 const API_URL = process.env.REACT_APP_BACKEND_URL || (typeof window !== 'undefined' ? window.location.origin : '');
-const emptyArticle = { title: '', excerpt: '', body: '', category: 'Catatan', image_url: '', intro_video: '', music_url: '', music_title: '', font: '', published: false };
+const emptyArticle = { title: '', excerpt: '', body: '', category: 'Journal', image_url: '', intro_video: '', music_url: '', music_title: '', font: '', published: false };
 // Same ids as the portfolio typography system so CSS classes can be shared.
 const FONT_OPTIONS = [
   { value: '', label: 'Bawaan (Georgia)', hint: 'Tenang dan klasik, cocok untuk hampir semua tulisan.' },
   { value: 'lora', label: 'Lora', hint: 'Serif hangat dan mudah dibaca untuk esai panjang.' },
-  { value: 'plus-jakarta', label: 'Plus Jakarta Sans', hint: 'Sans modern dan bersih untuk catatan singkat.' },
+  { value: 'plus-jakarta', label: 'Plus Jakarta Sans', hint: 'Sans modern dan bersih untuk journal singkat.' },
   { value: 'merriweather', label: 'Merriweather', hint: 'Serif jurnalistik, tegas dan nyaman untuk cerita.' },
 ];
 const LIMITS = {
@@ -206,7 +206,7 @@ const ArticlesManager = () => {
 
   const editArticle = (item) => {
     setEditingId(item.article_id);
-    setArticle({ title: item.title, excerpt: item.excerpt || '', body: item.body || '', category: item.category || 'Catatan', image_url: item.image_url || '', intro_video: item.intro_video || '', music_url: item.music_url || '', music_title: item.music_title || '', font: item.font || '', published: item.published });
+    setArticle({ title: item.title, excerpt: item.excerpt || '', body: item.body || '', category: item.category || 'Journal', image_url: item.image_url || '', intro_video: item.intro_video || '', music_url: item.music_url || '', music_title: item.music_title || '', font: item.font || '', published: item.published });
     setMessage(`Sedang menyunting “${item.title}”.`);
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };

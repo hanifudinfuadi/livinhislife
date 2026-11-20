@@ -46,7 +46,7 @@ const ContactSection = () => {
           <span className="section-badge">Terbuka untuk kolaborasi</span>
           <h2 className="contact-title">Ceritakan apa yang ingin Anda bangun.</h2>
           <p className="contact-description">
-            Mari mulai dengan percakapan sederhana tentang ide dan tujuan Anda.
+            Mari mulai dengan percakapan sederhana in perspective ide dan tujuan Anda.
           </p>
           <form className="portfolio-contact-form" onSubmit={submitInquiry}>
             <input aria-label="Nama" placeholder="Nama" required value={form.name} onChange={(event) => setForm({ ...form, name: event.target.value })} />

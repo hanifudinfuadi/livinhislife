@@ -18,7 +18,7 @@ const PortfolioHero = () => {
     <section className={`portfolio-hero ${isVisible ? 'visible' : ''}`}>
       <div className="hero-container">
         <div className="hero-content">
-          <div className="hero-badge">Fotografi & Karya Tulis · Indonesia</div>
+          <div className="hero-badge">Fotografi & Fragments Tulis · Indonesia</div>
           <h1 className="hero-title">
             {settings?.hero_title || <>Aku Bisa Membidik Apa Saja,<br />Kecuali Kedatanganmu.</>}
           </h1>
@@ -29,7 +29,7 @@ const PortfolioHero = () => {
             “Di ketinggian Rinjani, tanganku tetap tenang menanti fajar. Namun saat kamu berdiri di seberang jalan, fokusku perlahan luruh. Jantungku berdetak lebih cepat dari bunyi rana. Ternyata, yang paling sulit kubidik bukanlah cahaya atau sudut, melainkan perasaanku sendiri.”
           </blockquote>
           <a href="#contact" className="hero-cta">
-            Jelajahi karya
+            Jelajahi fragments
             <span className="cta-arrow">→</span>
           </a>
         </div>

@@ -252,7 +252,7 @@ async def upload_finish(
 @router.get("/settings")
 async def get_settings(request: Request):
     doc = await request.app.state.db.portfolio_settings.find_one({"key": "main"}, {"_id": 0})
-    return doc or {"key": "main", "hero_title": "Cerita visual dan tertulis.", "hero_subtitle": "Fotografi, dokumentasi, dan karya tulis.", "about_text": "", "contact_email": ""}
+    return doc or {"key": "main", "hero_title": "Cerita visual dan tertulis.", "hero_subtitle": "Fotografi, dokumentasi, dan fragments tulis.", "about_text": "", "contact_email": ""}
 
 
 @router.put("/settings")

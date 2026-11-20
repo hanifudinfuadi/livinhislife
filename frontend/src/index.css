@@ -1,3 +1,11 @@
 /* Global styles live in App.css (Tailwind preflight + base layer).
    This file is imported after App so it is intentionally empty to avoid
    overriding component styles. */
+
+/* Smooth scroll exploration UX — explore website dengan bergulir halus */
+html {
+  scroll-behavior: smooth;
+}
+body {
+  overflow-x: hidden;
+}

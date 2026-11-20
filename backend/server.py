@@ -1,5 +1,6 @@
 """Portfolio Backend Server for FastAPI with MongoDB storage."""
 import asyncio
+import os
 from pathlib import Path
 
 from dotenv import load_dotenv
@@ -15,7 +16,6 @@ load_dotenv(ROOT_DIR / '.env')
 mongo_url = os.environ.get('MONGO_URL', 'mongodb://localhost:27017').strip()
 db_name = os.environ.get('DB_NAME', 'hanif_portfolio').strip()
 
-import os
 client = AsyncIOMotorClient(mongo_url, serverSelectionTimeoutMS=8000)
 db = client[db_name]
 
@@ -27,12 +27,11 @@ app.add_middleware(
     CORSMiddleware,
     allow_origins=[
         "http://localhost:3000",
-        os.environ.get('FRONTEND_ORIGINS', 'http://localhost:3000')
-        .split(',')
-        .strip() if hasattr(os, 'environ') else ["*"]
+        *[o.strip() for o in os.environ.get('FRONTEND_ORIGINS', 'http://localhost:3000').split(',')],
     ],
     allow_methods=["*"],
     allow_headers=["*"],
+    allow_credentials=True,
 )
 
 # Store db in app state for route access
@@ -71,7 +70,7 @@ class ArticleOut(BaseModel):
     slug: str
     excerpt: Optional[str] = ""
     body: Optional[str] = ""
-    category: Optional[str] = "Catatan"
+    category: Optional[str] = "Journal"
     image_url: Optional[str] = ""
     intro_video: Optional[str] = ""
     music_url: Optional[str] = ""
@@ -86,7 +85,7 @@ class ArticleCreate(BaseModel):
     title: str
     excerpt: Optional[str] = ""
     body: Optional[str] = ""
-    category: Optional[str] = "Catatan"
+    category: Optional[str] = "Journal"
     image_url: Optional[str] = ""
     intro_video: Optional[str] = ""
     music_url: Optional[str] = ""

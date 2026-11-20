@@ -1,4 +1,4 @@
-# ✅ Glass Flower Galaxy Portfolio - Complete Setup
+# ✨ Oriel Studio Portfolio - Complete Setup
 
 ## 🚀 Quick Start
 
@@ -6,12 +6,12 @@
 
 ```bash
 # Navigate to frontend folder
-cd /Users/hanifudin/Downloads/web\ porto\ hanif/frontend
+cd /Users/hanifudin/Documents/GitHub/web\ porto\ hanif/frontend
 
 # Install dependencies (only if not already done)
 yarn install
 
-# Run development server
+# Run development server with Oriel Studio styling
 yarn start
 ```
 
@@ -22,25 +22,49 @@ Application running on: http://localhost:5173
 
 ---
 
-## 📊 Files Updated for Full Content Display
+## 🎨 Oriel Studio Design System Integration
 
-### 1. Component Fixes ✅
+### Overview
+
+Portofolio telah direkonfigurasi dengan **Oriel Studio Template** - sebuah desain studio premium dengan animasi scroll-driven yang imersif. Semua fungsi teknis tetap dipertahankan tanpa perubahan.
+
+### Key Changes Implemented ✨
+
+1. **CSS Foundation** ✅
+   - Added Oriel Studio's design system tokens
+   - Imported `interior-tailwind.css` to all components
+   - Responsive typography scale with Bricolage Grotesque + Inter Tight
+
+2. **Color Palette** ✅
+   - Light mode: archival paper (#fafaf9) with warm tones
+   - Dark mode: deep dark (#101012) with muted accents
+   - 8-color system for consistent theming
+
+3. **Typography Scale** ✅
+   | Size | Use Case | Font Family |
+   |------|----------|-------------|
+   | 70-84px | Hero Title | Bricolage Grotesque |
+   | 52-64px | Section Heading | Bricolage Grotesque |
+   | 40-52px | Card Title | Inter Tight |
+   | 19px | Body Text | Inter Tight |
+
+### Files Updated ✅
 
 | File | Status | Purpose |
 |------|--------|---------|
-| `WorksGrid.js` | ✅ Fixed | Added error handling for API failures |
-| `WorksGrid.css` | ✅ Updated | Responsive grid with fallback images |
-| `Novel3DShowcase.js` | ✅ Enhanced | WebGL fallback for unsupported browsers |
-| `Novel3DShowcase.css` | ✅ Updated | Smooth animations on all cards |
-| `JournalSection.js` | ✅ Added | Quote display with proper state management |
-| `JournalSection.css` | ✅ Added | Editorial typography styling |
-| `PortfolioNav.js` | ✅ Updated | Navigation links with active states |
-| `PortfolioNav.css` | ✅ Added | Animated underlines on hover |
-| `PortfolioHero.css` | ✅ Added | Large typography styling system |
-| `AboutSection.css` | ✅ Added | Bio content layout |
-| `ContactSection.css` | ✅ Added | Form inputs with focus states |
-| `App.css` | ✅ Added | Root styles for entire app |
-| `PreLanding.css` | ✅ Updated | Logo fade-in animation |
+| `oriel-tailwind.css` | ✨ NEW | Oriel Studio design system foundation |
+| `App.css` | ✅ Enhanced | Global styles integration |
+| `index.css` | ✅ Updated | Base layer setup |
+
+### Component Integration (Non-Breaking) ⚡
+
+- PortfolioNav → Oriel navigation styling
+- WorksGrid → Oriel project display
+- AboutSection → Oriel cards layout
+- JournalSection → Oriel quote display
+- SideNav → Oriel sticky header
+- ContactSection → Oriel form styling
+
 
 ### 2. New Component Files ✨
 

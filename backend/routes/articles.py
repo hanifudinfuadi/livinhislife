@@ -28,7 +28,7 @@ class ArticleOut(BaseModel):
     slug: str
     excerpt: Optional[str] = ""
     body: Optional[str] = ""
-    category: Optional[str] = "Catatan"
+    category: Optional[str] = "Journal"
     image_url: Optional[str] = ""
     intro_video: Optional[str] = ""
     music_url: Optional[str] = ""
@@ -43,7 +43,7 @@ class ArticleCreate(BaseModel):
     title: str
     excerpt: Optional[str] = ""
     body: Optional[str] = ""
-    category: Optional[str] = "Catatan"
+    category: Optional[str] = "Journal"
     image_url: Optional[str] = ""
     intro_video: Optional[str] = ""
     music_url: Optional[str] = ""
@@ -147,7 +147,7 @@ async def create_article(request: Request, data: ArticleCreate, user=Depends(get
         "slug": make_slug(data.title),
         "excerpt": data.excerpt or "",
         "body": data.body or "",
-        "category": data.category or "Catatan",
+        "category": data.category or "Journal",
         "image_url": data.image_url or "",
         "intro_video": data.intro_video or "",
         "music_url": data.music_url or "",

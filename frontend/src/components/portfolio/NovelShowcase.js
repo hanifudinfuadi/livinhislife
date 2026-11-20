@@ -26,7 +26,7 @@ const NovelShowcase = () => {
   const featuredNovel = {
     title: 'Bayangan Senja',
     subtitle: 'Novel Perdana',
-    tagline: 'Kisah tentang pencarian jati diri di tengah hiruk pikuk modernitas',
+    tagline: 'Kisah in perspective pencarian jati diri di tengah hiruk pikuk modernitas',
     description: 'Novel perdana yang mengisahkan perjalanan seorang pemuda dalam mencari makna hidup di kota besar. Ditulis dengan prosa puitis yang mengalir, mengajak pembaca merenungkan esensi keberadaan dan keindahan dalam kesederhanaan.',
     details: {
       pages: '150+ halaman',
@@ -123,7 +123,7 @@ const NovelShowcase = () => {
       {/* Other Novels Grid */}
       <div className="other-novels-section">
         <div className="section-header-novel">
-          <span className="section-badge">Karya Lainnya</span>
+          <span className="section-badge">Fragments Lainnya</span>
           <h3 className="section-title-novel">Koleksi Novel & Esai</h3>
         </div>
 

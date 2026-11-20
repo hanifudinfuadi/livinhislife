@@ -1,8 +1,14 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import './WorksGrid.css';
+import GlassFolder from "../ui/glass-folder-cards";
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL || (typeof window !== 'undefined' ? window.location.origin : 'http://localhost:8001');
+
+const ART_FOR_CATEGORY = {
+  Fotografi: 'aurora',
+  Novel: 'dusk',
+  Esai: 'verdant',
+};
 
 const WorksGrid = () => {
   const navigate = useNavigate();
@@ -11,7 +17,6 @@ const WorksGrid = () => {
   const [managedProjects, setManagedProjects] = useState([]);
   const sectionRef = useRef(null);
 
-  // Sample fallback projects if API fails
   const projects = [
     {
       title: 'Urban Chronicles',
@@ -30,7 +35,7 @@ const WorksGrid = () => {
     {
       title: 'Bayangan Senja',
       category: 'Novel',
-      description: 'Kisah tentang pencarian jati diri di tengah hiruk pikuk modernitas, ditulis dengan prosa puitis.',
+      description: 'Kisah in perspective pencarian jati diri di tengah hiruk pikuk modernitas, ditulis dengan prosa puitis.',
       image: 'https://images.unsplash.com/photo-1544947950-fa07a98d237f?w=800&h=600&fit=crop',
       images: ['https://images.unsplash.com/photo-1544947950-fa07a98d237f?w=800&h=600&fit=crop']
     },
@@ -44,7 +49,7 @@ const WorksGrid = () => {
     {
       title: 'Manuscript Langit',
       category: 'Esai',
-      description: 'Kumpulan esai filosofis tentang alam, waktu, dan keberadaan manusia dalam semesta.',
+      description: 'Kumpulan esai filosofis in perspective alam, waktu, dan keberadaan manusia dalam semesta.',
       image: 'https://images.unsplash.com/photo-1506880018603-83d5b814b5a6?w=800&h=600&fit=crop',
       images: ['https://images.unsplash.com/photo-1506880018603-83d5b814b5a6?w=800&h=600&fit=crop']
     },
@@ -57,7 +62,6 @@ const WorksGrid = () => {
     }
   ];
 
-  // Load data from API with error handling
   useEffect(() => {
     const observer = new IntersectionObserver(
       ([entry]) => {
@@ -70,7 +74,6 @@ const WorksGrid = () => {
     return () => observer.disconnect();
   }, []);
 
-  // Fetch data with proper error handling
   useEffect(() => {
     let isMounted = true;
 
@@ -105,13 +108,10 @@ const WorksGrid = () => {
       .catch(() => {});
   }, []);
 
-  // Use fallback if no data loaded
   const displayedProjects = managedProjects.length ? managedProjects : projects;
 
-  // Ensure filters are always set
   const filters = ['Semua', 'Fotografi', 'Novel', 'Esai'];
 
-  // Filter with safe checks
   const filteredProjects = activeFilter === 'Semua'
     ? displayedProjects
     : displayedProjects.filter((project) => project.category === activeFilter);
@@ -126,70 +126,85 @@ const WorksGrid = () => {
     return () => observer.disconnect();
   }, [activeFilter]);
 
+  const artForCategory = (category) => ART_FOR_CATEGORY[category] || 'glacier';
+
   return (
     <section
       ref={sectionRef}
       id="works"
-      className={`works-section ${isVisible ? 'visible' : ''}`}
+      className={`works-section ${isVisible ? 'visible' : ''} py-16 bg-white`}
     >
-      <div className="works-container">
-        <div className="works-header">
-          <span className="section-badge">Selected works</span>
-          <h2 className="works-title">Karya terbaru</h2>
-          <p className="works-description">
+      <div className="works-container max-w-7xl mx-auto px-6">
+        <div className="works-header mb-10">
+          <span className="section-badge inline-block mb-3 px-3 py-1 rounded-full bg-gray-100 text-gray-700 text-xs font-medium uppercase tracking-wider">Selected works</span>
+          <h2 className="works-title text-3xl md:text-4xl font-serif font-bold text-gray-900 mb-3">Fragments terbaru</h2>
+          <p className="works-description text-gray-600 max-w-xl">
             Eksplorasi identitas visual dan pengalaman digital.
           </p>
         </div>
 
-        <div className="filter-bar">
+        <div className="filter-bar flex flex-wrap gap-3 mb-10">
           {filters.map(filter => (
             <button
               key={filter}
-              className={`filter-btn ${activeFilter === filter ? 'active' : ''}`}
+              className={`filter-btn px-5 py-2 rounded-full text-sm font-medium transition ${activeFilter === filter ? 'bg-gray-900 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}`}
               onClick={() => setActiveFilter(filter)}
             >
               {filter}
             </button>
           ))}
-          <span className="work-count">{filteredProjects.length} karya</span>
+          <span className="ml-auto work-count text-gray-500 text-sm">{filteredProjects.length} fragments</span>
         </div>
 
-        <div className="projects-grid">
-          {filteredProjects.map((project, index) => (
-            <div
-              key={index}
-              className="project-card"
-              onClick={() => project.content_id && navigate(`/karya/${project.content_id}`)}
-              style={{ animationDelay: `${index * 0.1}s` }}
-            >
-              <div className="project-image-wrapper">
-                <img
-                  src={
-                    project.image ||
-                    'https://images.unsplash.com/photo-1497235133610-6f118ddcb88a?w=800&h=600&fit=crop'
-                  }
-                  alt={project.title}
-                  className="project-image"
+        <div className="projects-grid grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6 max-w-7xl mx-auto px-6 justify-items-center">
+          {filteredProjects.map((project, index) => {
+            const art = artForCategory(project.category);
+            const tone = index % 2 === 0 ? 'light' : 'dark';
+            const files = (project.images || []).map((img, i) => ({
+              name: `${project.title} ${i + 1}`,
+              meta: 'Image',
+              art,
+              image: img,
+              href: `/fragments/${project.content_id}`,
+            }));
+            return (
+              <div
+                key={project.content_id || index}
+                className="project-card-wrapper"
+                style={{ animationDelay: `${index * 0.12}s` }}
+              >
+                <GlassFolder
+                  label={project.title}
+                  meta={project.category}
+                  tone={tone}
+                  art={art}
+                  seed={index + 3}
+                  width={250}
+                  image={project.image || undefined}
+                  files={files}
+                  action="more"
+                  labelPlacement="bottom-left"
+                  appearDelay={index * 120}
+                  onFileSelect={(file) => {
+                    if (file.href) navigate(file.href);
+                  }}
+                  menu={[
+                    { label: "Lihat detail", onSelect: () => navigate(`/fragments/${project.content_id}`) },
+                    { label: "Kategori: " + project.category },
+                  ]}
                 />
-                <div className="project-overlay">
-                  <span className="view-project">Lihat Detail →</span>
-                </div>
               </div>
-              <div className="project-info">
-                <div className="project-category">{project.category}</div>
-                <h3 className="project-title">{project.title}</h3>
-                <p className="project-description">{project.description}</p>
-              </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
 
-        <div className="works-cta">
-          <a href="#contact" className="cta-button">
+        <div className="works-cta mt-12">
+          <a href="#contact" className="cta-button inline-flex items-center px-6 py-3 bg-gray-900 text-white rounded-lg font-medium hover:bg-gray-800 transition">
             Diskusikan proyek Anda
-            <span className="cta-arrow">→</span>
+            <span className="cta-arrow ml-2">→</span>
           </a>
         </div>
+
       </div>
 
     </section>

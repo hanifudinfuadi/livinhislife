@@ -252,7 +252,7 @@ const WorkDetail = () => {
     return (
       <div className="work-detail">
         <PortfolioNav />
-        <p className="wd-status">Memuat karya…</p>
+        <p className="wd-status">Memuat fragments…</p>
       </div>
     );
   }
@@ -262,10 +262,10 @@ const WorkDetail = () => {
       <div className="work-detail">
         <PortfolioNav />
         <div className="wd-status">
-          <h1>Karya tidak ditemukan</h1>
-          <p>Karya yang Anda cari mungkin sudah tidak tersedia.</p>
+          <h1>Fragments tidak ditemukan</h1>
+          <p>Fragments yang Anda cari mungkin sudah tidak tersedia.</p>
           <Link className="wd-back-link" to="/portfolio#works">
-            ← Kembali ke daftar karya
+            ← Kembali ke daftar fragments
           </Link>
         </div>
       </div>
@@ -279,7 +279,7 @@ const WorkDetail = () => {
       <article className="wd-hero">
         <div className="wd-hero-inner">
           <Link className="wd-back-link" to="/portfolio#works">
-            ← Semua karya
+            ← Semua fragments
           </Link>
           <div className="wd-meta">
             <span className="wd-badge">{item.category || 'Dokumentasi'}</span>

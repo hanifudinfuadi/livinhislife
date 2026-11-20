@@ -47,7 +47,7 @@ const DocumentationsSection = () => {
         {/* Header Section */}
         <header className="docs-header visible">
           <span className="section-badge">Documentary Works</span>
-          <h2 className="docs-title">Catatan Visual & Dokumentasi</h2>
+          <h2 className="docs-title">Journal Visual & Dokumentasi</h2>
           <p className="docs-subtitle">
             Arsip visual yang menangkap momen, tempat, dan manusia dalam konteks historis.
             <br />
@@ -69,7 +69,7 @@ const DocumentationsSection = () => {
             ))}
           </div>
 
-          <span className="work-count">{documentations.length} karya dokumentasi</span>
+          <span className="work-count">{documentations.length} fragments dokumentasi</span>
         </div>
 
         {/* Grid Layout */}
@@ -127,7 +127,7 @@ const DocumentationsSection = () => {
         {/* CTA */}
         <div className="documents-cta visible">
           <a href="#contact" className="cta-button">
-            Eksplorasi Karya Lengkap
+            Eksplorasi Fragments Lengkap
             <span className="cta-arrow">→</span>
           </a>
         </div>

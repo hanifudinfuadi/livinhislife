@@ -6,9 +6,6 @@
   "functions": {
     "api/index.py": {
       "maxDuration": 300
-    },
-    "backend/routes/*": {
-      "maxDuration": 300
     }
   },
   "rewrites": [
@@ -31,8 +28,7 @@
   ],
   "env": {
     "USE_DB_STORAGE": "true",
-    "MONGO_URL": "mongodb://localhost:27017",
     "DB_NAME": "hanif_portfolio",
-    "FRONTEND_ORIGINS": "http://localhost:3000,https://narative-storyteller.vercel.app"
+    "FRONTEND_ORIGINS": "https://narative-storyteller.vercel.app"
   }
 }

@@ -9,7 +9,7 @@
 ## ✅ Implementasi Lengkap
 
 ### 1. Documentations Section (✨ NEW)
-Menghadirkan karya dokumentasi dengan layout editorial seperti httpster.net/foam-talent:
+Menghadirkan fragments dokumentasi dengan layout editorial seperti httpster.net/foam-talent:
 
 ```javascript
 const documentations = [
@@ -31,12 +31,12 @@ const documentations = [
 
 ---
 
-### 2. Enhanced Journal Section (Catatan & Tulisan)
+### 2. Enhanced Journal Section (Journal & Tulisan)
 
 **Kategori Penulisan:**
 ```javascript
 const categories = {
-  'daily_note': 'Catatan Harian',      // Personal, emotional moments
+  'daily_note': 'Journal Harian',      // Personal, emotional moments
   'poetry': 'Sajak & Pantun',          // Poetic expressions
   'philosophical': 'Filsafat',         // Deep thinking pieces
   'motivation': 'Motivasi',            // Inspirational quotes

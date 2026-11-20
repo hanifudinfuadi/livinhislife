@@ -14,7 +14,7 @@ const AboutNovelModal = ({ isOpen, onClose }) => {
 
   const fullSynopsis = `Bagaimana jika seseorang yang paling kita tunggu justru menjadi alasan kita tak pernah benar-benar melangkah?
 
-Saat berusia sepuluh tahun, Alex menulis sebuah daftar sederhana tentang ibu yang ia impikan. Lima keinginan polos seorang anak: melihat salju bersama, bermain bola, menjelajahi tempat-tempat jauh, bebas menangis tanpa dianggap lemah, dan memiliki seseorang yang benar-benar melihatnya ketika pulang.
+Saat berusia sepuluh tahun, Alex menulis sebuah daftar sederhana in perspective ibu yang ia impikan. Lima keinginan polos seorang anak: melihat salju bersama, bermain bola, menjelajahi tempat-tempat jauh, bebas menangis tanpa dianggap lemah, dan memiliki seseorang yang benar-benar melihatnya ketika pulang.
 
 Namun, sebelum daftar itu menjadi kenyataan, ibunya pergi.
 
@@ -24,7 +24,7 @@ Bersama empat sahabat masa kecilnya, Alex memulai perjalanan untuk mewujudkan da
 
 Sebab, terkadang, perjalanan terjadi bukanlah perjalanan menuju tempat yang belum pernah kita kunjungi, melainkan perjalanan menuju bagian diri yang telah lama kita tinggalkan.
 
-Daftar Ibu yang Hebat adalah kisah tentang seorang anak yang terlalu lama menunggu, seorang ibu yang menyimpan cerita, persahabatan yang menjadi jalan pulang, dan sebuah pengingat bahwa menjadi dewasa bukan harus melupakan anak kecil di dalam diri kita.
+Daftar Ibu yang Hebat adalah kisah in perspective seorang anak yang terlalu lama menunggu, seorang ibu yang menyimpan cerita, persahabatan yang menjadi jalan pulang, dan sebuah pengingat bahwa menjadi dewasa bukan harus melupakan anak kecil di dalam diri kita.
 
 Karena pada akhirnya, setiap orang berhak memiliki tempat untuk pulang. Dan setiap jiwa berhak untuk dilihat, diterima, serta dicintai.`;
 
@@ -161,7 +161,7 @@ Karena pada akhirnya, setiap orang berhak memiliki tempat untuk pulang. Dan seti
               viewport={{ once: true }}
               transition={{ duration: 0.6 }}
             >
-              <h2 className="about-section-title">Tentang Novel</h2>
+              <h2 className="about-section-title">In Perspective Novel</h2>
               
               {/* Audio Player */}
               <div className="audio-player">

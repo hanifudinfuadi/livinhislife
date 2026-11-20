@@ -63,20 +63,20 @@ const AdminDashboard = ({ user }) => {
         <div className="admin-welcome">
           <span className="admin-eyebrow">RUANG KERJA PRIBADI</span>
           <h2>Selamat datang, {user?.name?.split(' ')[0]}.</h2>
-          <p>Kelola cerita, foto, dan karya yang tampil di portfolio Anda.</p>
+          <p>Kelola cerita, foto, dan fragments yang tampil di portfolio Anda.</p>
         </div>
 
         <div className="admin-cards">
           <div className="admin-card">
             <div className="admin-card-icon">📝</div>
-            <h3>Catatan & tulisan</h3>
+            <h3>Journal & tulisan</h3>
             <p>Terbitkan jurnal, kutipan, esai, dan cerita panjang Anda.</p>
             <button className="admin-card-btn" onClick={() => { setActiveChannel('journal'); document.getElementById('channel-manager')?.scrollIntoView({ behavior: 'smooth' }); }}>Buka ruang tulis</button>
           </div>
           <div className="admin-card ai-card-active">
             <div className="admin-card-icon">✨</div>
             <h3>Asisten deskripsi</h3>
-            <p>Bantu menyusun deskripsi karya dan proyek.</p>
+            <p>Bantu menyusun deskripsi fragments dan proyek.</p>
             <button 
               className="admin-card-btn admin-card-btn-active"
               onClick={() => setShowAIGenerator(true)}
@@ -94,16 +94,16 @@ const AdminDashboard = ({ user }) => {
 
           <div className="admin-card">
             <div className="admin-card-icon">📝</div>
-            <h3>Tentang saya</h3>
-            <p>Perbarui cerita personal dan informasi kontak.</p>
+            <h3>In Perspective saya</h3>
+            <p>Perbarui cerita personal dan informasi connect.</p>
             <button className="admin-card-btn" onClick={() => { setActiveChannel('story'); document.getElementById('channel-manager')?.scrollIntoView({ behavior: 'smooth' }); }}>Kelola narasi</button>
           </div>
 
           <div className="admin-card">
             <div className="admin-card-icon">🖼️</div>
-            <h3>Fotografi & karya</h3>
-            <p>Kelola dokumentasi, galeri, dan karya visual.</p>
-            <button className="admin-card-btn" onClick={() => { setActiveChannel('works'); document.getElementById('channel-manager')?.scrollIntoView({ behavior: 'smooth' }); }}>Kelola karya</button>
+            <h3>Fotografi & fragments</h3>
+            <p>Kelola dokumentasi, galeri, dan fragments visual.</p>
+            <button className="admin-card-btn" onClick={() => { setActiveChannel('works'); document.getElementById('channel-manager')?.scrollIntoView({ behavior: 'smooth' }); }}>Kelola fragments</button>
           </div>
 
           <div className="admin-card">

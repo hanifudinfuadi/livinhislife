@@ -138,7 +138,7 @@ const AIDescriptionGenerator = ({ onClose }) => {
                 name="brief"
                 value={formData.brief}
                 onChange={handleInputChange}
-                placeholder="Berikan konteks tambahan tentang project ini..."
+                placeholder="Berikan konteks tambahan in perspective project ini..."
                 rows="3"
                 disabled={isGenerating}
               />

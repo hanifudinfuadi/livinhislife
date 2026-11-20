@@ -285,7 +285,7 @@ const PortfolioManager = ({ channel }) => {
   };
 
   if (channel === 'hero' || channel === 'story') return <section className="portfolio-manager"><h2>{channel === 'hero' ? 'Pengaturan hero' : 'Cerita & narasi'}</h2><p>Perubahan tersimpan ke database dan dapat ditampilkan pada halaman portfolio.</p><form onSubmit={saveSettings} className="portfolio-form">
-    {channel === 'hero' ? <><label>Judul utama<input value={settings.hero_title || ''} onChange={(e) => setSettings({ ...settings, hero_title: e.target.value })} /></label><label>Teks pengantar<textarea rows="4" value={settings.hero_subtitle || ''} onChange={(e) => setSettings({ ...settings, hero_subtitle: e.target.value })} /></label></> : <><label>Tentang saya<textarea rows="5" value={settings.about_text || ''} onChange={(e) => setSettings({ ...settings, about_text: e.target.value })} /></label><label>Email kontak<input type="email" value={settings.contact_email || ''} onChange={(e) => setSettings({ ...settings, contact_email: e.target.value })} /></label></>}
+    {channel === 'hero' ? <><label>Judul utama<input value={settings.hero_title || ''} onChange={(e) => setSettings({ ...settings, hero_title: e.target.value })} /></label><label>Teks pengantar<textarea rows="4" value={settings.hero_subtitle || ''} onChange={(e) => setSettings({ ...settings, hero_subtitle: e.target.value })} /></label></> : <><label>In Perspective saya<textarea rows="5" value={settings.about_text || ''} onChange={(e) => setSettings({ ...settings, about_text: e.target.value })} /></label><label>Email connect<input type="email" value={settings.contact_email || ''} onChange={(e) => setSettings({ ...settings, contact_email: e.target.value })} /></label></>}
     <button className="admin-card-btn admin-card-btn-active">Simpan perubahan</button>{notice && <p>{notice}</p>}</form></section>;
 
   if (channel === 'contact') return <section className="portfolio-manager"><h2>Pesan pengunjung</h2><p>{inquiries.length} pesan masuk</p><div className="portfolio-item-list">{inquiries.map((item) => <article key={item.inquiry_id}><strong>{item.name} · {item.email}</strong><p>{item.message}</p><small>{new Date(item.created_at).toLocaleString('id-ID')}</small></article>)}{!inquiries.length && <p>Belum ada pesan.</p>}</div></section>;
@@ -295,7 +295,7 @@ const PortfolioManager = ({ channel }) => {
   const pendingCount = queue.length;
 
   return <section className="portfolio-manager">
-    <h2>{mediaMode ? 'Pustaka media' : channel === 'novel' ? 'Koleksi novel resmi' : 'Karya & dokumentasi portfolio'}</h2>
+    <h2>{mediaMode ? 'Pustaka media' : channel === 'novel' ? 'Koleksi novel resmi' : 'Fragments & dokumentasi portfolio'}</h2>
     <p>Dokumentasi acara seperti wedding atau lamaran dapat memuat banyak foto dalam satu showcase. Pilih lebih dari 10 foto saat mengunggah, atur posisi tiap foto sebelum diunggah.</p>
     {!mediaMode && <div className="portfolio-category-tabs">{availableCategories.map((entry) => <button key={entry.kind} className={kind === entry.kind ? 'active' : ''} onClick={() => changeKind(entry.kind)}>{entry.label}</button>)}</div>}
 
