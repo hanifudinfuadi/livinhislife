@@ -26,14 +26,5 @@
       "destination": "/index.html"
     }
   ],
-  "env": {
-    "USE_DB_STORAGE": "true",
-    "DB_NAME": "hanif_portfolio",
-    "MONGO_URL": "",
-    "FRONTEND_ORIGINS": "https://narative-storyteller.vercel.app",
-    "ADMIN_EMAIL": "",
-    "ADMIN_PASSWORD_HASH": "",
-    "ADMIN_NAME": "",
-    "COOKIE_SECURE": "true"
-  }
+  "env": {}
 }
