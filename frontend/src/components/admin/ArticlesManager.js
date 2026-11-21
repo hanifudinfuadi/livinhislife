@@ -310,7 +310,7 @@ const ArticlesManager = () => {
           {article.music_url && (
             <div className="article-music-preview">
               <span>🎵 {article.music_title || 'Lagu pengiring'}</span>
-              <audio src={resolveUrl(article.music_url)} controls preload="none" />
+              <audio src={resolveUrl(article.music_url)} controls preload="none" crossOrigin="anonymous" />
             </div>
           )}
           <span className="article-upload-note">MP3/OGG/WAV, maksimal 30 MB — diunggah bertahap agar lolos batas server.</span>

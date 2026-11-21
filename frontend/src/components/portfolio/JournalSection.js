@@ -258,6 +258,7 @@ const JournalSection = () => {
                   preload="auto"
                   controls
                   src={musicTrack}
+                  crossOrigin="anonymous"
                 />
               </div>
             )}

@@ -89,6 +89,7 @@ const WorkDetail = () => {
     if (!musicUrl || status !== 'ready') return undefined;
 
     const audio = new Audio(musicUrl);
+    audio.crossOrigin = "anonymous";
     audio.loop = true;
     audio.preload = 'auto';
     audio.volume = 0.7;
