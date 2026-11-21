@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect } from "react";
 import { motion } from "framer-motion";
 import "./App.css";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
@@ -20,6 +20,15 @@ import Login from "./components/Login";
 import ResetPassword from "./components/ResetPassword";
 import AdminDashboard from "./components/AdminDashboard";
 import ProtectedRoute from "./components/ProtectedRoute";
+
+/* Jangan pernah biarkan URL yang tidak dikenal merender halaman kosong —
+   pengunjung (dan crawler) menganggap situs rusak. Arahkan ke beranda. */
+function NotFoundRedirect() {
+  useEffect(() => {
+    window.location.replace("/");
+  }, []);
+  return null;
+}
 
 const sectionVariants = {
   hidden: { opacity: 0, y: 30 },
@@ -74,6 +83,7 @@ function AppRouter() {
           </ProtectedRoute>
         }
       />
+      <Route path="*" element={<NotFoundRedirect />} />
     </Routes>
   );
 }

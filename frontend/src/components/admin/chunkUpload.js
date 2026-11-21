@@ -5,6 +5,16 @@ import { describeUploadError } from './uploadError';
 export const CHUNK_SIZE = 3 * 1024 * 1024;
 export const MAX_IMAGE_BYTES = 14 * 1024 * 1024;
 
+// Sebagian pemilih berkas menyerahkan audio/video lewat jalur gambar. Backend
+// menolak kalau kind tidak cocok dengan ekstensi, jadi kind diturunkan dari MIME.
+const kindOf = (file) => {
+  const mime = String(file.type || '').toLowerCase();
+  const ext = String(file.name || '').split('.').pop().toLowerCase();
+  if (mime.startsWith('video/') || ['mp4', 'm4v', 'mov', 'webm', 'ogg', 'ogv'].includes(ext)) return 'video';
+  if (mime.startsWith('audio/') || ['mp3', 'wav', 'm4a', 'aac', 'oga'].includes(ext)) return 'audio';
+  return 'image';
+};
+
 const PART_RETRIES = 2;
 
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
@@ -27,7 +37,8 @@ const postPart = async (api, uploadId, index, chunk) => {
  * Kembalikan objek { url, name, size } dari endpoint upload-finish.
  */
 export const uploadImageInParts = async (api, file, onProgress) => {
-  if (file.size > MAX_IMAGE_BYTES) {
+  const kind = kindOf(file);
+  if (kind === 'image' && file.size > MAX_IMAGE_BYTES) {
     throw new Error(
       `Gambar lebih dari ${Math.round(MAX_IMAGE_BYTES / 1048576)} MB. Kecilkan ukurannya lalu coba lagi.`
     );
@@ -56,7 +67,7 @@ export const uploadImageInParts = async (api, file, onProgress) => {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     credentials: 'include',
-    body: JSON.stringify({ upload_id: uploadId, kind: 'image', filename: name, content_type: file.type || '' }),
+    body: JSON.stringify({ upload_id: uploadId, kind, filename: name, content_type: file.type || '' }),
   });
   if (!response.ok) throw new Error(await describeUploadError(response));
   const uploaded = await response.json();

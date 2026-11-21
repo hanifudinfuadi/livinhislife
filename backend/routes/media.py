@@ -12,6 +12,7 @@ def get_db(request: Request) -> AsyncIOMotorDatabase:
 
 
 @router.get("/{filename:path}")
+@router.head("/{filename:path}")
 async def serve_media(request: Request, filename: str):
     """Serve media files from storage backend (Cloudinary, GridFS, or local)."""
     db = get_db(request)
@@ -20,6 +21,20 @@ async def serve_media(request: Request, filename: str):
     size = await upload_size(db, filename)
     if size is None:
         raise HTTPException(status_code=404, detail="File not found")
+
+    # Browsers probe audio/video with HEAD before streaming; GET-only handlers
+    # answer 405 and the player then refuses to load the file.
+    if request.method == "HEAD":
+        return Response(
+            status_code=200,
+            headers={
+                "Content-Length": str(size),
+                "Content-Type": _get_content_type(filename),
+                "Accept-Ranges": "bytes",
+                "Cache-Control": "public, max-age=31536000, immutable",
+            },
+        )
+    
     
     # Handle Range requests for video/audio streaming
     range_header = request.headers.get("Range")
@@ -59,6 +74,7 @@ async def serve_media(request: Request, filename: str):
 
 
 @router.get("/cloudinary/{filename:path}")
+@router.head("/cloudinary/{filename:path}")
 async def serve_cloudinary_media(request: Request, filename: str):
     """Redirect to Cloudinary URL for Cloudinary-stored files."""
     db = get_db(request)

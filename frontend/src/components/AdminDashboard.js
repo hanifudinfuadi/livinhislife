@@ -37,15 +37,13 @@ const AdminDashboard = ({ user }) => {
         <div className="admin-header-content">
           <h1>Studio Hanif</h1>
           <div className="admin-user-section">
-            {user?.picture && (
-              <img 
-                src={user.picture} 
-                alt={user.name} 
-                className="admin-user-avatar"
-              />
-            )}
+            <img
+              src={`${process.env.PUBLIC_URL}/images/novel/Hanif.jpeg`}
+              alt="Hanifudin"
+              className="admin-user-avatar"
+            />
             <div className="admin-user-info">
-              <p className="admin-user-name">{user?.name}</p>
+              <p className="admin-user-name">Hanifudin</p>
               <p className="admin-user-email">{user?.email}</p>
             </div>
             <button 
@@ -62,7 +60,7 @@ const AdminDashboard = ({ user }) => {
       <main className="admin-main">
         <div className="admin-welcome">
           <span className="admin-eyebrow">RUANG KERJA PRIBADI</span>
-          <h2>Selamat datang, {user?.name?.split(' ')[0]}.</h2>
+          <h2>Selamat datang, Hanifudin.</h2>
           <p>Kelola cerita, foto, dan fragments yang tampil di portfolio Anda.</p>
         </div>
 
