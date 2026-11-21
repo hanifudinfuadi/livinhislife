@@ -17,6 +17,7 @@ import JournalSection from "./components/portfolio/JournalSection";
 import ContactSection from "./components/portfolio/ContactSection";
 import PortfolioFooter from "./components/portfolio/PortfolioFooter";
 import Login from "./components/Login";
+import ResetPassword from "./components/ResetPassword";
 import AdminDashboard from "./components/AdminDashboard";
 import ProtectedRoute from "./components/ProtectedRoute";
 
@@ -64,6 +65,7 @@ function AppRouter() {
       <Route path="/portfolio" element={<PortfolioHome />} />
       <Route path="/fragments/:contentId" element={<WorkDetail />} />
       <Route path="/login" element={<Login />} />
+      <Route path="/reset-password" element={<ResetPassword />} />
       <Route
         path="/admin"
         element={

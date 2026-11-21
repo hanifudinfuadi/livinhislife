@@ -9,6 +9,16 @@ class User(BaseModel):
     email: str
     name: Optional[str] = None
     picture: Optional[str] = None
+    password_hash: Optional[str] = None
+    created_at: Optional[datetime] = None
+
+
+class PasswordResetToken(BaseModel):
+    token_hash: str
+    user_id: str
+    email: str
+    expires_at: datetime
+    used: bool = False
     created_at: Optional[datetime] = None
 
 

@@ -119,7 +119,9 @@ const Login = () => {
         <button type="submit" disabled={isLoading} className="login-submit-btn">
           {isLoading ? 'Memeriksa…' : 'Masuk ke admin'}
         </button>
-        <p className="login-security-note">Akses pribadi · koneksi aman · sesi berakhir setelah 7 hari</p>
+        <p className="login-security-note">
+          <a href="/reset-password" style={{ color: '#c9a96e', textDecoration: 'underline' }}>Lupa kata sandi?</a> · Akses pribadi · koneksi aman · sesi berakhir setelah 7 hari
+        </p>
       </form>
     </main>
   );

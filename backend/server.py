@@ -4,8 +4,12 @@ import os
 from pathlib import Path
 
 from dotenv import load_dotenv
-from fastapi import FastAPI, Request, HTTPException
+from fastapi import APIRouter, FastAPI, Request, HTTPException
 from fastapi.staticfiles import StaticFiles
+from pydantic import BaseModel, Field
+from typing import Optional, List
+from datetime import datetime
+import uuid
 from motor.motor_asyncio import AsyncIOMotorClient
 from starlette.middleware.cors import CORSMiddleware
 
@@ -61,7 +65,7 @@ else:
     print("INFO: MongoDB GridFS storage enabled (required for Vercel deployment)")
 
 # Create a router with the /api prefix
-api_router = FastAPI.routes.APIRouter(prefix="/api")
+api_router = APIRouter(prefix="/api")
 
 # Include route modules
 from routes.articles import router as articles_router
@@ -81,12 +85,6 @@ api_router.include_router(media_router)
 class StatusCheck(BaseModel):
     id: str = Field(default_factory=lambda: str(uuid.uuid4()))
     timestamp: datetime = Field(default_factory=datetime.now, freeze=True)
-
-from pydantic import BaseModel, Field, FieldInfo
-from typing import Optional, List
-from datetime import datetime
-import uuid
-from typing_extensions import Annotated
 
 
 class ArticleOut(BaseModel):

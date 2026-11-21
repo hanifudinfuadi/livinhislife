@@ -15,7 +15,7 @@ from starlette.concurrency import run_in_threadpool
 import sys
 from pathlib import Path
 sys.path.append(str(Path(__file__).parent.parent))
-from models import User
+from models import User, PasswordResetToken
 
 router = APIRouter(prefix="/auth", tags=["auth"])
 SESSION_DAYS = 7
@@ -146,7 +146,7 @@ async def get_current_user(
     )
     if not session_doc:
         raise HTTPException(status_code=401, detail="Invalid session")
-    configured_hash = os.getenv("ADMIN_PASSWORD_HASH", "")
+    configured_hash = await _resolve_admin_password_hash(db, _admin_email())
     current_credential_version = hashlib.sha256(configured_hash.encode("utf-8")).hexdigest()
     if not hmac.compare_digest(
         session_doc.get("credential_version", ""), current_credential_version
@@ -175,11 +175,14 @@ async def get_current_user(
 @router.post("/login")
 async def login(request: Request, response: Response, data: AdminLogin):
     admin_email = _admin_email()
-    password_hash = os.getenv("ADMIN_PASSWORD_HASH", "")
-    if not admin_email or not password_hash:
+    if not admin_email:
         raise HTTPException(status_code=503, detail="Admin credentials are not configured")
 
     db = get_db(request)
+    password_hash = await _resolve_admin_password_hash(db, admin_email)
+    if not password_hash:
+        raise HTTPException(status_code=503, detail="Admin credentials are not configured")
+
     now = datetime.now(timezone.utc)
     key = _login_key(data.email, request.client.host if request.client else "unknown")
     await _check_login_limit(db, key, now)
@@ -241,3 +244,94 @@ async def logout(
         samesite="none" if is_https else "lax",
     )
     return {"message": "Logged out successfully"}
+
+
+class ForgotPasswordRequest(BaseModel):
+    email: EmailStr
+
+
+class ResetPasswordRequest(BaseModel):
+    token: str
+    new_password: str = Field(min_length=6, max_length=128)
+
+    @field_validator("new_password")
+    @classmethod
+    def validate_new_password_format(cls, value: str) -> str:
+        if not value.isascii() or not value.isalnum() or not any(char.isalpha() for char in value) or not any(char.isdigit() for char in value):
+            raise ValueError("Kata sandi harus memakai huruf dan angka saja")
+        return value
+
+
+RESET_TOKEN_EXPIRY_MINUTES = 15
+
+
+def _hash_token(token: str) -> str:
+    return hashlib.sha256(token.encode("utf-8")).hexdigest()
+
+
+def _generate_password_hash(password: str, iterations: int = 600_000) -> str:
+    salt = secrets.token_hex(16)
+    actual = hashlib.pbkdf2_hmac("sha256", password.encode("utf-8"), salt.encode("utf-8"), iterations)
+    encoded = base64.urlsafe_b64encode(actual).decode("ascii").rstrip("=")
+    return f"pbkdf2_sha256${iterations}${salt}${encoded}"
+
+
+async def _resolve_admin_password_hash(db, admin_email: str) -> str:
+    """Return the password hash stored in DB if present, otherwise fall back to env."""
+    user_doc = await db.users.find_one({"email": admin_email}, {"_id": 0, "password_hash": 1})
+    if user_doc and user_doc.get("password_hash"):
+        return user_doc["password_hash"]
+    return os.getenv("ADMIN_PASSWORD_HASH", "")
+
+
+@router.post("/forgot-password")
+async def forgot_password(request: Request, data: ForgotPasswordRequest):
+    admin_email = _admin_email()
+    if not admin_email or data.email.strip().lower() != admin_email:
+        raise HTTPException(status_code=404, detail="Email tidak ditemukan")
+    db = get_db(request)
+    now = datetime.now(timezone.utc)
+    token = secrets.token_urlsafe(32)
+    expires_at = now + timedelta(minutes=RESET_TOKEN_EXPIRY_MINUTES)
+    await db.password_reset_tokens.insert_one({
+        "token_hash": _hash_token(token),
+        "user_id": f"admin_{secrets.token_hex(8)}",
+        "email": admin_email,
+        "expires_at": expires_at,
+        "used": False,
+        "created_at": now,
+    })
+    smtp_host = os.getenv("SMTP_HOST", "").strip()
+    if smtp_host:
+        # Email delivery would go here (SMTP/SendGrid/Brevo).
+        return {"message": "Link reset password telah dikirim ke email Anda."}
+    return {"message": "Token reset password telah dibuat.", "reset_token": token}
+
+
+@router.post("/reset-password")
+async def reset_password(request: Request, data: ResetPasswordRequest):
+    db = get_db(request)
+    now = datetime.now(timezone.utc)
+    token_hash = _hash_token(data.token)
+    record = await db.password_reset_tokens.find_one({"token_hash": token_hash}, {"_id": 0})
+    if not record:
+        raise HTTPException(status_code=400, detail="Token tidak valid")
+    expires_at = record["expires_at"]
+    if isinstance(expires_at, str):
+        expires_at = datetime.fromisoformat(expires_at)
+    if expires_at.tzinfo is None:
+        expires_at = expires_at.replace(tzinfo=timezone.utc)
+    if expires_at < now or record.get("used"):
+        raise HTTPException(status_code=400, detail="Token telah kadaluarsa atau sudah digunakan")
+    admin_email = _admin_email()
+    new_hash = _generate_password_hash(data.new_password)
+    await db.users.update_one(
+        {"email": admin_email},
+        {"$set": {"password_hash": new_hash, "updated_at": now}},
+    )
+    await db.password_reset_tokens.update_one(
+        {"token_hash": token_hash},
+        {"$set": {"used": True}},
+    )
+    await db.user_sessions.delete_many({"email": admin_email})
+    return {"message": "Kata sandi telah direset. Silakan masuk dengan kata sandi baru."}
