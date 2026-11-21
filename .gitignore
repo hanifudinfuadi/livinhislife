@@ -47,3 +47,6 @@ __pycache__/
 
 # Hasil backup database (jangan di-commit)
 backups/
+
+# Uploaded media (diisi oleh backend, jangan commit ke repo)
+backend/uploads/
