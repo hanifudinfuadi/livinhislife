@@ -22,3 +22,10 @@
   .portfolio-photo-list{grid-template-columns:1fr}
   .portfolio-upload-row{align-items:flex-start;flex-direction:column}
 }
+
+.portfolio-inquiries-head{display:flex;align-items:center;gap:20px;justify-content:space-between;flex-wrap:wrap}
+.portfolio-item-list article.portfolio-inquiry{flex-direction:column;align-items:stretch;gap:8px}
+.portfolio-inquiry-row{align-items:center;display:flex;gap:16px;justify-content:space-between}
+.portfolio-inquiry-row strong{flex:1}
+.portfolio-inquiry-delete{background:#ffffff1a;border:1px solid #ffb3b344;border-radius:7px;color:#ffb3b3;cursor:pointer;font:inherit;padding:7px 14px;transition:background .2s ease}
+.portfolio-inquiry-delete:hover{background:#ffb3b322}

@@ -1,4 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
+import * as XLSX from 'xlsx';
 import ImageCropper from './ImageCropper';
 import { describeUploadError } from './uploadError';
 import { CHUNK_SIZE, uploadImageInParts } from './chunkUpload';
@@ -67,7 +68,42 @@ const PortfolioManager = ({ channel }) => {
     if (channel === 'contact') fetch(`${API}/api/portfolio/inquiries`, { credentials: 'include' }).then((r) => r.json()).then(setInquiries).catch(() => setNotice('Gagal memuat pesan.'));
   }, [channel, kind]);
 
-  useEffect(() => () => { queue.forEach((entry) => URL.revokeObjectURL(entry.url)); }, []); 
+  useEffect(() => () => { queue.forEach((entry) => URL.revokeObjectURL(entry.url)); }, []);
+
+  const deleteInquiry = async (inquiryId) => {
+    if (typeof window !== 'undefined' && !window.confirm('Hapus pesan ini?')) return;
+    try {
+      const response = await fetch(`${API}/api/portfolio/inquiries/${inquiryId}`, { method: 'DELETE', credentials: 'include' });
+      if (!response.ok) throw new Error();
+      setInquiries((prev) => prev.filter((item) => item.inquiry_id !== inquiryId));
+      setNotice('Pesan dihapus.');
+    } catch { setNotice('Gagal menghapus pesan.'); }
+  };
+
+  const exportInquiriesToExcel = () => {
+    if (!inquiries.length) { setNotice('Belum ada pesan untuk diunduh.'); return; }
+    const rows = inquiries.map((item, index) => ({
+      'No': index + 1,
+      'Tipe': item.type === 'novel_order' ? 'Pesanan Novel' : 'Pesan Kontak',
+      'Subjek': item.subject || '',
+      'Nama': item.name || '',
+      'Email': item.email || '',
+      'WhatsApp': item.phone || '',
+      'Jumlah': item.details?.quantity || '',
+      'Alamat': item.details?.address || '',
+      'Novel': item.details?.novel || '',
+      'Pesan': item.message || '',
+      'Tanggal': item.created_at ? new Date(item.created_at).toLocaleString('id-ID') : '',
+    }));
+    const worksheet = XLSX.utils.json_to_sheet(rows);
+    worksheet['!cols'] = [
+      { wch: 5 }, { wch: 14 }, { wch: 28 }, { wch: 20 }, { wch: 28 }, { wch: 16 },
+      { wch: 8 }, { wch: 30 }, { wch: 24 }, { wch: 50 }, { wch: 20 },
+    ];
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, 'Pesan Pengunjung');
+    XLSX.writeFile(workbook, `pesan-pengunjung-${new Date().toISOString().slice(0, 10)}.xlsx`);
+  };
 
   const changeKind = (next) => { setKind(next); setForm(fresh); setEditing(null); setEditingTitle(''); reloadItems(next).catch((error) => setNotice(error.message)); };
 
@@ -288,7 +324,7 @@ const PortfolioManager = ({ channel }) => {
     {channel === 'hero' ? <><label>Judul utama<input value={settings.hero_title || ''} onChange={(e) => setSettings({ ...settings, hero_title: e.target.value })} /></label><label>Teks pengantar<textarea rows="4" value={settings.hero_subtitle || ''} onChange={(e) => setSettings({ ...settings, hero_subtitle: e.target.value })} /></label></> : <><label>In Perspective saya<textarea rows="5" value={settings.about_text || ''} onChange={(e) => setSettings({ ...settings, about_text: e.target.value })} /></label><label>Email connect<input type="email" value={settings.contact_email || ''} onChange={(e) => setSettings({ ...settings, contact_email: e.target.value })} /></label></>}
     <button className="admin-card-btn admin-card-btn-active">Simpan perubahan</button>{notice && <p>{notice}</p>}</form></section>;
 
-  if (channel === 'contact') return <section className="portfolio-manager"><h2>Pesan pengunjung</h2><p>{inquiries.length} pesan masuk</p><div className="portfolio-item-list">{inquiries.map((item) => <article key={item.inquiry_id}><strong>{item.type === 'novel_order' ? '🛒 Pesanan Novel · ' : ''}{item.name} · {item.email}{item.phone ? ` · ${item.phone}` : ''}</strong>{item.subject && <p><em>{item.subject}</em></p>}<p>{item.message}</p><small>{new Date(item.created_at).toLocaleString('id-ID')}</small></article>)}{!inquiries.length && <p>Belum ada pesan.</p>}</div></section>;
+  if (channel === 'contact') return <section className="portfolio-manager"><div className="portfolio-inquiries-head"><div><h2>Pesan pengunjung</h2><p>{inquiries.length} pesan masuk</p></div><button type="button" className="admin-card-btn admin-card-btn-active" onClick={exportInquiriesToExcel} disabled={!inquiries.length}>⬇ Unduh Excel</button></div><div className="portfolio-item-list">{inquiries.map((item) => <article className="portfolio-inquiry" key={item.inquiry_id}><div className="portfolio-inquiry-row"><strong>{item.type === 'novel_order' ? '🛒 Pesanan Novel · ' : ''}{item.name} · {item.email}{item.phone ? ` · ${item.phone}` : ''}</strong><button type="button" className="portfolio-inquiry-delete" onClick={() => deleteInquiry(item.inquiry_id)}>Hapus</button></div>{item.subject && <p><em>{item.subject}</em></p>}{item.details?.quantity && <p>Jumlah: {item.details.quantity}{item.details?.address ? ` · Alamat: ${item.details.address}` : ''}</p>}<p>{item.message}</p><small>{new Date(item.created_at).toLocaleString('id-ID')}</small></article>)}{!inquiries.length && <p>Belum ada pesan.</p>}</div>{notice && <p role="status">{notice}</p>}</section>;
 
   const mediaMode = channel === 'media';
   const availableCategories = channel === 'novel' ? categories.filter((entry) => entry.kind === 'novel') : categories;

@@ -288,3 +288,11 @@ async def create_inquiry(request: Request, data: dict):
 @router.get("/inquiries")
 async def list_inquiries(request: Request, user=Depends(get_current_user)):
     return await request.app.state.get_db().portfolio_inquiries.find({}, {"_id": 0}).sort("created_at", -1).to_list(1000)
+
+
+@router.delete("/inquiries/{inquiry_id}")
+async def delete_inquiry(request: Request, inquiry_id: str, user=Depends(get_current_user)):
+    result = await request.app.state.get_db().portfolio_inquiries.delete_one({"inquiry_id": inquiry_id})
+    if not result.deleted_count:
+        raise HTTPException(status_code=404, detail="Pesan tidak ditemukan")
+    return {"deleted": True}

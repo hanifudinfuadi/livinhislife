@@ -14,7 +14,8 @@
     "react-dom": "^19.0.0",
     "react-router-dom": "^7.9.6",
     "tailwind-merge": "^3.7.0",
-    "three": "^0.187.0"
+    "three": "^0.187.0",
+    "xlsx": "^0.18.5"
   },
   "scripts": {
     "tailwind": "tailwindcss -i src/styles/tailwind.input.css -o src/styles/tailwind.output.css --minify",
