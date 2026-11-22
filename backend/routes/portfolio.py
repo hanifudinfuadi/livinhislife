@@ -266,7 +266,19 @@ async def save_settings(request: Request, data: dict, user=Depends(get_current_u
 
 @router.post("/inquiries")
 async def create_inquiry(request: Request, data: dict):
-    doc = {"inquiry_id": str(uuid.uuid4()), "name": str(data.get("name", ""))[:160], "email": str(data.get("email", ""))[:254], "message": str(data.get("message", ""))[:10000], "created_at": datetime.now(timezone.utc), "read": False}
+    inquiry_type = str(data.get("type", "contact"))[:40] or "contact"
+    doc = {
+        "inquiry_id": str(uuid.uuid4()),
+        "type": inquiry_type,
+        "subject": str(data.get("subject", ""))[:200],
+        "name": str(data.get("name", ""))[:160],
+        "email": str(data.get("email", ""))[:254],
+        "phone": str(data.get("phone", ""))[:40],
+        "details": data.get("details", {}) if isinstance(data.get("details"), dict) else {},
+        "message": str(data.get("message", ""))[:10000],
+        "created_at": datetime.now(timezone.utc),
+        "read": False,
+    }
     if not doc["name"] or not doc["email"] or not doc["message"]:
         raise HTTPException(status_code=400, detail="Nama, email, dan pesan wajib diisi")
     await request.app.state.get_db().portfolio_inquiries.insert_one(doc)

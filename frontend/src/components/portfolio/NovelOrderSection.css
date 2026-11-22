@@ -1,0 +1,17 @@
+.novel-order{background:#f7f5f1;border-top:1px solid #e5e5e5;padding:80px 40px}
+.novel-order-inner{margin:0 auto;max-width:760px}
+.novel-order-title{font-family:Georgia,serif;font-size:32px;font-weight:600;color:#1a1a1a;margin:0 0 16px}
+.novel-order-desc{color:#555;font-size:16px;line-height:1.7;margin:0 0 24px}
+.novel-order-link{color:#b07d3a;font-weight:600;display:inline-block;margin:0 0 28px;text-decoration:none;transition:color .25s ease}
+.novel-order-link:hover{color:#8c6127;text-decoration:underline}
+.novel-order-form{display:flex;flex-direction:column;gap:18px}
+.novel-order-row{display:flex;gap:18px;flex-wrap:wrap}
+.novel-order-row label{flex:1;min-width:200px}
+.novel-order-form label{color:#1a1a1a;display:flex;flex-direction:column;font-size:14px;font-weight:500;gap:8px}
+.novel-order-form input,.novel-order-form textarea{background:#fff;border:1px solid #d9d5cc;border-radius:8px;color:#1a1a1a;font-size:15px;padding:12px 14px;transition:border-color .2s ease,box-shadow .2s ease}
+.novel-order-form input:focus,.novel-order-form textarea:focus{border-color:#b07d3a;outline:none;box-shadow:0 0 0 3px #b07d3a26}
+.novel-order-btn{align-self:flex-start;background:#1a1a1a;border:none;border-radius:50px;color:#fff;cursor:pointer;font-size:15px;font-weight:500;letter-spacing:.5px;padding:14px 32px;transition:all .3s ease}
+.novel-order-btn:hover:not(:disabled){background:#333;box-shadow:0 8px 24px #00000026;transform:translateY(-2px)}
+.novel-order-btn:disabled{opacity:.6;cursor:not-allowed}
+.novel-order-notice{margin:0;font-size:14px;color:#2e7d32}
+@media (max-width:640px){.novel-order{padding:56px 24px}.novel-order-title{font-size:26px}.novel-order-row label{min-width:100%}}

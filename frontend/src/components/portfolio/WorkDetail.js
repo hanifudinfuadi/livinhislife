@@ -3,6 +3,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import PortfolioNav from './PortfolioNav';
 import PortfolioFooter from './PortfolioFooter';
+import NovelOrderSection from './NovelOrderSection';
 import './WorkDetail.css';
 
 const API = process.env.REACT_APP_BACKEND_URL || (typeof window !== 'undefined' ? window.location.origin : 'http://localhost:8001');
@@ -413,6 +414,13 @@ const WorkDetail = () => {
             </div>
           </section>
         </>
+      )}
+
+      {item.kind === 'novel' && (
+        <NovelOrderSection
+          novelTitle={item.title}
+          orderUrl={resolveMediaUrl(item?.metadata?.order_url || item?.order_url || '')}
+        />
       )}
 
       <PortfolioFooter />
