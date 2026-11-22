@@ -39,11 +39,14 @@ def get_db():
 app = FastAPI(title="Portfolio Backend")
 
 # CORS middleware - crucial for frontend-backend communication
+_default_origins = "http://localhost:3000,https://livinhislife-beta.vercel.app,https://livinhislife.vercel.app"
 app.add_middleware(
     CORSMiddleware,
     allow_origins=[
         "http://localhost:3000",
-        *[o.strip() for o in os.environ.get('FRONTEND_ORIGINS', 'http://localhost:3000').split(',')],
+        "https://livinhislife-beta.vercel.app",
+        "https://livinhislife.vercel.app",
+        *[o.strip() for o in os.environ.get('FRONTEND_ORIGINS', _default_origins).split(',') if o.strip()],
     ],
     allow_methods=["*"],
     allow_headers=["*"],

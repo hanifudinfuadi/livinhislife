@@ -128,9 +128,22 @@ async def get_current_user(
         origin = request.headers.get("Origin", "")
         allowed_origins = {
             value.strip().rstrip("/")
-            for value in os.getenv("FRONTEND_ORIGINS", "http://localhost:3000").split(",")
+            for value in os.getenv(
+                "FRONTEND_ORIGINS",
+                "http://localhost:3000,https://livinhislife-beta.vercel.app,https://livinhislife.vercel.app",
+            ).split(",")
             if value.strip()
         }
+        allowed_origins.update({
+            "https://livinhislife-beta.vercel.app",
+            "https://livinhislife.vercel.app",
+        })
+        # Also allow the request's own host (same-origin) so any Vercel
+        # deployment domain works without hardcoding each preview URL.
+        request_host = request.headers.get("Host", "").split(":")[0]
+        if request_host:
+            allowed_origins.add(f"https://{request_host}")
+            allowed_origins.add(f"http://{request_host}")
         if origin.rstrip("/") not in allowed_origins:
             raise HTTPException(status_code=403, detail="Request origin is not allowed")
     token = session_token
