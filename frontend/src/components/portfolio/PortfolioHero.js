@@ -3,7 +3,7 @@ import './PortfolioHero.css';
 
 // Foto profil hero — simpan gambarnya di frontend/public/images/hero-profile.jpg
 const heroProfile = `${process.env.PUBLIC_URL}/images/hero-profile.jpg`;
-const BACKEND_URL = process.env.REACT_APP_BACKEND_URL || (typeof window !== 'undefined' ? window.location.origin : 'http://localhost:8001');
+const BACKEND_URL = (typeof window !== 'undefined' ? window.location.origin : 'http://localhost:8000');
 
 const PortfolioHero = () => {
   const [isVisible, setIsVisible] = useState(false);

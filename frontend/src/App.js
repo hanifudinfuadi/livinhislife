@@ -18,8 +18,11 @@ import ContactSection from "./components/portfolio/ContactSection";
 import PortfolioFooter from "./components/portfolio/PortfolioFooter";
 import Login from "./components/Login";
 import ResetPassword from "./components/ResetPassword";
-import AdminDashboard from "./components/AdminDashboard";
 import ProtectedRoute from "./components/ProtectedRoute";
+import AdminLayout from "./components/admin/AdminLayout";
+import AdminOverview from "./components/admin/AdminOverview";
+import AdminSection from "./components/admin/AdminSection";
+import { ADMIN_MENU } from "./components/admin/adminMenu";
 
 /* Jangan pernah biarkan URL yang tidak dikenal merender halaman kosong —
    pengunjung (dan crawler) menganggap situs rusak. Arahkan ke beranda. */
@@ -79,10 +82,15 @@ function AppRouter() {
         path="/admin"
         element={
           <ProtectedRoute>
-            <AdminDashboard />
+            <AdminLayout />
           </ProtectedRoute>
         }
-      />
+      >
+        <Route index element={<AdminOverview />} />
+        {ADMIN_MENU.map((item) => (
+          <Route key={item.slug} path={item.slug} element={<AdminSection section={item.slug} />} />
+        ))}
+      </Route>
       <Route path="*" element={<NotFoundRedirect />} />
     </Routes>
   );

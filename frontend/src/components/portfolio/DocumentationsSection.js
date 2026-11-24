@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import './DocumentationsSection.css';
 
-const BACKEND_URL = process.env.REACT_APP_BACKEND_URL || (typeof window !== 'undefined' ? window.location.origin : 'http://localhost:8001');
+const BACKEND_URL = (typeof window !== 'undefined' ? window.location.origin : 'http://localhost:8000');
 
 const DocumentationsSection = () => {
   const [selectedDocumentation, setSelectedDocumentation] = useState(null);

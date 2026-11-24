@@ -2,7 +2,7 @@ import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import './JournalSection.css';
 
-const BACKEND_URL = process.env.REACT_APP_BACKEND_URL || (typeof window !== 'undefined' ? window.location.origin : 'http://localhost:8001');
+const BACKEND_URL = (typeof window !== 'undefined' ? window.location.origin : 'http://localhost:8000');
 
 
 const FONT_CLASSES = {

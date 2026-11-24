@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import './NovelOrderSection.css';
 
-const API = process.env.REACT_APP_BACKEND_URL || (typeof window !== 'undefined' ? window.location.origin : 'http://localhost:8001');
+const API = (typeof window !== 'undefined' ? window.location.origin : 'http://localhost:8000');
 
 const emptyForm = { name: '', email: '', phone: '', quantity: '1', address: '', message: '' };
 

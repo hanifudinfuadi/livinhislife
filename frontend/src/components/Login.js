@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import './Login.css';
 
-const API_URL = process.env.REACT_APP_BACKEND_URL || (typeof window !== 'undefined' ? window.location.origin : '');
+const API_URL = (typeof window !== 'undefined' ? window.location.origin : '');
 
 const Login = () => {
   const navigate = useNavigate();
@@ -32,7 +32,7 @@ const Login = () => {
 
     const base = API_URL;
     if (!base) {
-      setError('Konfigurasi backend tidak ditemukan. Cek variabel lingkungan REACT_APP_BACKEND_URL.');
+      setError('Konfigurasi server tidak ditemukan. Muat ulang halaman lalu coba lagi.');
       setIsLoading(false);
       return;
     }

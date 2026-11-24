@@ -5,9 +5,8 @@ import { describeUploadError } from './uploadError';
 import { CHUNK_SIZE, uploadImageInParts } from './chunkUpload';
 import './PortfolioManager.css';
 
-const API = process.env.REACT_APP_BACKEND_URL || (typeof window !== 'undefined' ? window.location.origin : '');
-// Halaman yang dibuka dari preview deployment tetap memakai API produksi.
-const API_BASE = API && API.includes('://') ? API : 'https://narative-storyteller.vercel.app';
+const API = (typeof window !== 'undefined' ? window.location.origin : '');
+const API_BASE = API;
 const categories = [
   { kind: 'documentation', label: 'Dokumentasi' },
   { kind: 'creative', label: 'Tulisan Kreatif' },
@@ -30,7 +29,10 @@ const LIMITS = {
 const limitOf = (kind) => LIMITS[kind] || LIMITS.video;
 
 const PortfolioManager = ({ channel }) => {
-  const [kind, setKind] = useState('documentation');
+  // Tiap channel punya "kind" tetap agar tab tidak melenceng dari route-nya.
+  const [kind, setKind] = useState(
+    channel === 'media' ? 'media' : channel === 'novel' ? 'novel' : 'documentation'
+  );
   const [items, setItems] = useState([]);
   const [form, setForm] = useState(fresh);
   const [editing, setEditing] = useState(null);
@@ -58,14 +60,21 @@ const PortfolioManager = ({ channel }) => {
   };
 
   useEffect(() => {
-    if (channel === 'works' || channel === 'media' || channel === 'novel') {
-      const selected = channel === 'novel' ? 'novel' : channel === 'media' ? 'media' : kind;
-      if (channel === 'media') setKind('media');
-      if (channel === 'novel') setKind('novel');
-      reloadItems(selected).catch((error) => setNotice(error.message));
+    if (channel === 'media') {
+      setKind('media');
+      reloadItems('media').catch((error) => setNotice(error.message));
+      return;
+    }
+    if (channel === 'novel') {
+      setKind('novel');
+      reloadItems('novel').catch((error) => setNotice(error.message));
+      return;
+    }
+    if (channel === 'works' || channel === 'fragments') {
+      reloadItems(kind).catch((error) => setNotice(error.message));
     }
     if (channel === 'hero' || channel === 'story') fetch(`${API}/api/portfolio/settings`).then((r) => r.json()).then(setSettings).catch(() => {});
-    if (channel === 'contact') fetch(`${API}/api/portfolio/inquiries`, { credentials: 'include' }).then((r) => r.json()).then(setInquiries).catch(() => setNotice('Gagal memuat pesan.'));
+    if (channel === 'contact') fetch(`${API}/api/portfolio/inquiries`, { credentials: 'include' }).then((r) => r.json()).then((data) => setInquiries(Array.isArray(data) ? data : [])).catch(() => setNotice('Gagal memuat pesan.'));
   }, [channel, kind]);
 
   useEffect(() => () => { queue.forEach((entry) => URL.revokeObjectURL(entry.url)); }, []);

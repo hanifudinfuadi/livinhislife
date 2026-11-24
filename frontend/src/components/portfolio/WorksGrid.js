@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import GlassFolder from "../ui/glass-folder-cards";
 
-const BACKEND_URL = process.env.REACT_APP_BACKEND_URL || (typeof window !== 'undefined' ? window.location.origin : 'http://localhost:8001');
+const BACKEND_URL = (typeof window !== 'undefined' ? window.location.origin : 'http://localhost:8000');
 
 const ART_FOR_CATEGORY = {
   Fotografi: 'aurora',

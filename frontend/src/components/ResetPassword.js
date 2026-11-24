@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import './ResetPassword.css';
 
-const API_URL = process.env.REACT_APP_BACKEND_URL || (typeof window !== 'undefined' ? window.location.origin : '');
+const API_URL = (typeof window !== 'undefined' ? window.location.origin : '');
 
 const ResetPassword = () => {
   const [email, setEmail] = useState('');

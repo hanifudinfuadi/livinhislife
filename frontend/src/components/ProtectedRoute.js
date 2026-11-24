@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Navigate, useLocation } from 'react-router-dom';
 
-const API_URL = process.env.REACT_APP_BACKEND_URL || (typeof window !== 'undefined' ? window.location.origin : '');
+const API_URL = (typeof window !== 'undefined' ? window.location.origin : '');
 
 const ProtectedRoute = ({ children }) => {
   const location = useLocation();

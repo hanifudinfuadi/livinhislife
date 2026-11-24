@@ -1,3 +1,6 @@
+import os
+from dotenv import load_dotenv
+
 """Portfolio Backend Server for FastAPI with MongoDB storage."""
 import asyncio
 import os
@@ -15,6 +18,12 @@ from starlette.middleware.cors import CORSMiddleware
 
 ROOT_DIR = Path(__file__).parent
 load_dotenv(ROOT_DIR / '.env')
+
+print("AI Configuration Loaded:", {
+    "openai": bool(os.getenv("OPENAI_API_KEY")),
+    "anthropic": bool(os.getenv("ANTHROPIC_API_KEY")),
+    "gemini": bool(os.getenv("GEMINI_API_KEY"))
+})
 
 # MongoDB connection setup (lazy - connect on first request)
 mongo_url = os.environ.get('MONGO_URL', 'mongodb://localhost:27017').strip()

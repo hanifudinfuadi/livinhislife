@@ -1,9 +1,9 @@
 const { createProxyMiddleware } = require('http-proxy-middleware');
 
-// Backend local berjalan di port 8001 (lihat package.json "dev:backend").
+// Backend local berjalan di port 8000 (lihat package.json "dev:backend").
 // `typeof window` tidak pernah terdefinisi di Node, jadi default-nya harus
 // eksplisit di sini; kalau tidak, proxy jatuh ke origin undefined.
-const BACKEND_URL = process.env.REACT_APP_BACKEND_URL || 'http://localhost:8001';
+const BACKEND_URL = process.env.REACT_APP_BACKEND_URL || 'http://localhost:8000';
 
 const proxy = () =>
   createProxyMiddleware({

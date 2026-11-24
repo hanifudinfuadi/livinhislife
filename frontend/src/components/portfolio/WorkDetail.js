@@ -6,7 +6,7 @@ import PortfolioFooter from './PortfolioFooter';
 import NovelOrderSection from './NovelOrderSection';
 import './WorkDetail.css';
 
-const API = process.env.REACT_APP_BACKEND_URL || (typeof window !== 'undefined' ? window.location.origin : 'http://localhost:8001');
+const API = (typeof window !== 'undefined' ? window.location.origin : 'http://localhost:8000');
 const DEFAULT_MUSIC = `${process.env.PUBLIC_URL}/audio/dengarkan-hatiku.mp3`;
 
 const resolveUrl = (url) => {

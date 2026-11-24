@@ -4,7 +4,7 @@ import { describeUploadError } from './uploadError';
 import { CHUNK_SIZE, uploadImageInParts } from './chunkUpload';
 import './ArticlesManager.css';
 
-const API_URL = process.env.REACT_APP_BACKEND_URL || (typeof window !== 'undefined' ? window.location.origin : '');
+const API_URL = (typeof window !== 'undefined' ? window.location.origin : '');
 const emptyArticle = { title: '', excerpt: '', body: '', category: 'Journal', image_url: '', intro_video: '', music_url: '', music_title: '', font: '', published: false };
 // Same ids as the portfolio typography system so CSS classes can be shared.
 const FONT_OPTIONS = [
